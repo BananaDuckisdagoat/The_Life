@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MyWorld — Home</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+.hero{
+  background:linear-gradient(135deg,rgba(168,85,247,.22),rgba(236,72,153,.14),rgba(255,107,107,.1));
+  border:1px solid rgba(168,85,247,.25);border-radius:24px;padding:32px 36px;
+  margin-bottom:24px;position:relative;overflow:hidden;
+}
+.hero::before{content:'';position:absolute;inset:-40px;background:radial-gradient(circle at 80% 50%,rgba(78,205,196,.12) 0%,transparent 60%);pointer-events:none;}
+.hero-greeting{font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:5px;}
+.hero-title{font-family:'Fredoka One',cursive;font-size:46px;line-height:1.05;background:linear-gradient(120deg,#fff 0%,#c4b5fd 50%,#f9a8d4 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+.hero-sub{color:var(--text-dim);font-size:14px;font-weight:700;max-width:440px;line-height:1.7;}
+.hero-emoji{position:absolute;right:36px;top:50%;transform:translateY(-50%);font-size:82px;animation:float 3s ease-in-out infinite;}
+
+/* Level card */
+.level-card{background:linear-gradient(135deg,rgba(168,85,247,.22),rgba(236,72,153,.15));border:1px solid rgba(168,85,247,.32);border-radius:20px;padding:24px;margin-bottom:24px;position:relative;overflow:hidden;}
+.level-card::after{content:'';position:absolute;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,.25) 0%,transparent 70%);right:-50px;top:-50px;pointer-events:none;}
+.lc-row{display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+.lc-num{font-family:'Fredoka One',cursive;font-size:66px;line-height:1;background:linear-gradient(135deg,#ffe66d,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;flex-shrink:0;}
+.lc-info{flex:1;}
+.lc-title{font-family:'Fredoka One',cursive;font-size:20px;margin-bottom:7px;}
+.lc-xp-wrap{background:rgba(255,255,255,.12);border-radius:99px;height:13px;overflow:hidden;margin-bottom:6px;}
+.lc-xp-bar{height:100%;background:linear-gradient(90deg,#a855f7,#ec4899,#ff6b6b);background-size:200%;animation:shimmer 2s linear infinite;border-radius:99px;transition:width .8s ease;}
+.lc-xp-label{font-size:12px;color:var(--text-dim);font-weight:800;}
+.lc-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;}
+.lc-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:900;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);}
+
+/* Quick links */
+.quick-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:18px;text-decoration:none;color:var(--text);display:flex;flex-direction:column;gap:8px;transition:var(--ease);}
+.quick-card:hover{transform:translateY(-5px);}
+.qc-icon{font-size:36px;}
+.qc-title{font-family:'Fredoka One',cursive;font-size:17px;}
+.qc-desc{font-size:11px;color:var(--text-dim);font-weight:700;line-height:1.5;flex:1;}
+.qc-arrow{opacity:.5;margin-top:auto;}
+.qc-games :hover,.qc-games{border-color:rgba(78,205,196,.3);background:rgba(78,205,196,.05);}
+.qc-games:hover{border-color:rgba(78,205,196,.6);box-shadow:0 10px 36px rgba(78,205,196,.18);}
+.qc-chess{border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.05);}
+.qc-chess:hover{border-color:rgba(168,85,247,.6);box-shadow:0 10px 36px rgba(168,85,247,.18);}
+.qc-school{border-color:rgba(255,230,109,.3);background:rgba(255,230,109,.05);}
+.qc-school:hover{border-color:rgba(255,230,109,.6);box-shadow:0 10px 36px rgba(255,230,109,.18);}
+.qc-fun{border-color:rgba(236,72,153,.3);background:rgba(236,72,153,.05);}
+.qc-fun:hover{border-color:rgba(236,72,153,.6);box-shadow:0 10px 36px rgba(236,72,153,.18);}
+.qc-about{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.05);}
+.qc-about:hover{border-color:rgba(34,197,94,.6);box-shadow:0 10px 36px rgba(34,197,94,.18);}
+.qc-bonus{border-color:rgba(255,230,109,.3);background:rgba(255,230,109,.05);cursor:pointer;}
+.qc-bonus:hover{border-color:rgba(255,230,109,.6);box-shadow:0 10px 36px rgba(255,230,109,.18);}
+
+/* Stats */
+.stat-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;padding:18px;text-align:center;}
+.stat-num{font-family:'Fredoka One',cursive;font-size:32px;margin-bottom:3px;}
+.stat-label{font-size:11px;color:var(--text-dim);font-weight:800;text-transform:uppercase;letter-spacing:.9px;}
+
+/* Daily challenge */
+.daily-card{background:linear-gradient(135deg,rgba(255,230,109,.12),rgba(251,146,60,.08));border:1px solid rgba(255,230,109,.28);border-radius:14px;padding:16px;margin-bottom:10px;}
+.dc-title{font-family:'Fredoka One',cursive;font-size:16px;color:var(--yellow);margin-bottom:5px;}
+.dc-desc{font-size:12px;font-weight:700;color:var(--text-dim);margin-bottom:9px;}
+.dc-bar-wrap{background:rgba(255,255,255,.1);border-radius:99px;height:8px;overflow:hidden;margin-bottom:5px;}
+.dc-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--yellow),var(--orange));transition:width .6s ease;}
+.dc-label{font-size:10px;color:var(--text-dim);font-weight:800;}
+
+/* Sticker grid */
+.sticker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px;}
+.sticker-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 5px;border-radius:11px;border:1px solid var(--card-border);background:var(--card-bg);transition:var(--ease);text-align:center;}
+.sticker-item.locked{opacity:.25;filter:grayscale(1);}
+.sticker-item.unlocked{border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.07);}
+.sticker-item.unlocked:hover{transform:scale(1.06);}
+.sticker-emoji{font-size:26px;display:block;}
+.sticker-name{font-size:9px;font-weight:800;color:var(--text-dim);line-height:1.2;}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">🌟 MyWorld</div>
+  <div class="sidebar-tagline">Your Personal Space</div>
+  <div class="sidebar-level">
+    <span class="level-badge">⭐ Level 1</span>
+    <div class="xp-bar-wrap"><div class="xp-bar" style="width:0%"></div></div>
+    <div class="xp-text">0 / 80 XP</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html"       class="nav-link active" data-page="home">   <span class="nav-icon">🏠</span><span>Home</span></a></li>
+    <li><a href="games.html"       class="nav-link"        data-page="games">  <span class="nav-icon">🎮</span><span>Games</span></a></li>
+    <li><a href="chess.html"       class="nav-link"        data-page="chess">  <span class="nav-icon">♟️</span><span>Chess</span></a></li>
+    <li><a href="school-life.html" class="nav-link"        data-page="school"> <span class="nav-icon">📚</span><span>School Life</span></a></li>
+    <li><a href="fun-zone.html"    class="nav-link"        data-page="funzone"><span class="nav-icon">🎉</span><span>Fun Zone</span></a></li>
+    <li><a href="about.html"        class="nav-link"        data-page="about">  <span class="nav-icon">👋</span><span>About Me</span></a></li>
+    <li><a href="wave-creator.html" class="nav-link"        data-page="wave">   <span class="nav-icon">🌊</span><span>Wave Creator</span></a></li>
+  </ul>
+  <div class="sidebar-footer" id="sideVisits">Made with ❤️ just for you!</div>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-greeting">👋 Welcome Back</div>
+    <h1 class="hero-title" data-username-greeting>Hey, Explorer! 👋</h1>
+    <p class="hero-sub">Your personal world of games, school memories, fun facts, and epic adventures. Let's go! 🚀</p>
+    <div class="hero-emoji">🌈</div>
+  </div>
+
+  <!-- BIG LEVEL CARD -->
+  <div class="level-card">
+    <div class="lc-row">
+      <div class="lc-num" id="bigLevelNum">1</div>
+      <div class="lc-info">
+        <div class="lc-title">🏅 Your Level &amp; XP</div>
+        <div class="lc-xp-wrap"><div class="lc-xp-bar" id="bigXpBar" style="width:0%"></div></div>
+        <div class="lc-xp-label" id="bigXpLabel">0 / 80 XP to Level 2</div>
+        <div class="lc-chips">
+          <span class="lc-chip">🔥 <span id="cVisits">0</span> Visits</span>
+          <span class="lc-chip">🏅 <span id="cStickers">0</span> Stickers</span>
+          <span class="lc-chip">🏆 Rank #<span id="cRank">–</span></span>
+          <span class="lc-chip" id="cUsername" style="color:var(--purple)">🎭 <span data-username>Explorer</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK LINKS -->
+  <div class="section-title">🗺️ Explore Your World</div>
+  <div class="grid-3" style="margin-bottom:26px">
+    <a href="games.html"       class="quick-card qc-games"> <span class="qc-icon">🎮</span><div class="qc-title">Games</div><div class="qc-desc">Play 10 built-in mini-games &amp; explore 15 online games</div><span class="qc-arrow">→</span></a>
+    <a href="chess.html"       class="quick-card qc-chess"> <span class="qc-icon">♟️</span><div class="qc-title">Chess</div><div class="qc-desc">Play a fully working chess game vs a friend or the AI</div><span class="qc-arrow">→</span></a>
+    <a href="school-life.html" class="quick-card qc-school"><span class="qc-icon">📚</span><div class="qc-title">School Life</div><div class="qc-desc">Save memories and highlights from each grade year</div><span class="qc-arrow">→</span></a>
+    <a href="fun-zone.html"    class="quick-card qc-fun">   <span class="qc-icon">🎉</span><div class="qc-title">Fun Zone</div><div class="qc-desc">Jokes, wild facts, quizzes, and daily challenges</div><span class="qc-arrow">→</span></a>
+    <a href="about.html"        class="quick-card qc-about"> <span class="qc-icon">👋</span><div class="qc-title">About Me</div><div class="qc-desc">Edit your profile, goals, playlist, and personal bio</div><span class="qc-arrow">→</span></a>
+    <a href="wave-creator.html" class="quick-card" style="border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.05)"><span class="qc-icon">🌊</span><div class="qc-title">Wave Creator</div><div class="qc-desc">Build custom wave levels, test them, and share with the community</div><span class="qc-arrow">→</span></a>
+    <div                        class="quick-card qc-bonus" onclick="claimBonus()"><span class="qc-icon">🎁</span><div class="qc-title">Daily Bonus!</div><div class="qc-desc">Click to claim your daily XP bonus — resets every 24 h</div><span class="qc-arrow" id="bonusArrow">→</span></div>
+  </div>
+
+  <!-- STATS + DAILY CHALLENGES -->
+  <div class="grid-2" style="margin-bottom:26px">
+    <div>
+      <div class="section-title">📊 Your Stats</div>
+      <div class="grid-2">
+        <div class="stat-card"><div class="stat-num" id="sXP" style="background:linear-gradient(135deg,#a855f7,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">0</div><div class="stat-label">Total XP</div></div>
+        <div class="stat-card"><div class="stat-num" id="sStickers" style="background:linear-gradient(135deg,#ffe66d,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">0</div><div class="stat-label">Stickers</div></div>
+        <div class="stat-card"><div class="stat-num" id="sVisits" style="background:linear-gradient(135deg,#4ecdc4,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">0</div><div class="stat-label">Page Visits</div></div>
+        <div class="stat-card"><div class="stat-num" id="sRank" style="background:linear-gradient(135deg,#22c55e,#4ecdc4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">#–</div><div class="stat-label">Global Rank</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">⚡ Daily Challenges</div>
+      <div class="daily-card"><div class="dc-title">🎮 Play a Game</div><div class="dc-desc">Visit the Games page and play something fun!</div><div class="dc-bar-wrap"><div class="dc-bar" id="dc1bar" style="width:0%"></div></div><div class="dc-label" id="dc1lbl">0/1 Complete</div></div>
+      <div class="daily-card"><div class="dc-title">📚 Visit School Life</div><div class="dc-desc">Check out or add a school memory today</div><div class="dc-bar-wrap"><div class="dc-bar" id="dc2bar" style="width:0%"></div></div><div class="dc-label" id="dc2lbl">0/1 Complete</div></div>
+      <div class="daily-card"><div class="dc-title">🌍 Be an Explorer</div><div class="dc-desc">Visit 3 different pages today</div><div class="dc-bar-wrap"><div class="dc-bar" id="dc3bar" style="width:0%"></div></div><div class="dc-label" id="dc3lbl">0/3 Pages</div></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+    <div class="section-title" style="margin-bottom:0">🏆 Leaderboard</div>
+    <div style="font-size:12px;color:var(--text-dim);font-weight:800">Earn XP to climb the ranks! ⬆️</div>
+  </div>
+  <div class="lb-card" id="lbCard" style="margin-bottom:26px">
+    <!-- rank banner inserted by JS -->
+    <div class="lb-header">
+      <span>Rank</span><span>Player</span><span style="text-align:right">XP</span><span style="text-align:center">Level</span><span style="text-align:right">🏅</span>
+    </div>
+    <div id="lbRows"><!-- rows injected by renderLeaderboard() --></div>
+  </div>
+
+  <!-- STICKER COLLECTION -->
+  <div class="section-title">🎁 Sticker Collection <span id="stickerCount" style="font-size:13px;font-weight:800;color:var(--text-dim)"></span></div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="sticker-grid" id="stickerGrid"></div>
+  </div>
+
+</main>
+
+<script src="shared.js"></script>
+<script>
+// ── Page init ──────────────────────────────────────
+recordVisit('home');
+
+// ── Leaderboard renderer ───────────────────────────
+function renderLeaderboard() {
+  const lb       = getLeaderboardData();     // sorted array
+  const username = getUsername();
+  const rank     = getUserRank();
+
+  // Rank banner (above table)
+  const existing = document.getElementById('lbBanner');
+  if (existing) existing.remove();
+  if (username && rank) {
+    const banner = document.createElement('div');
+    banner.id = 'lbBanner';
+    banner.className = 'rank-banner';
+    const inf = getLevelInfo(getXP());
+    banner.innerHTML = `
+      <div class="rank-banner-num">#${rank}</div>
+      <div class="rank-banner-label">
+        <strong style="color:var(--text)">${username}</strong> · Level ${inf.level}<br>
+        <span>${rank===1?'👑 You are THE champion!':rank<=3?'🥈 You\'re on the podium!':rank<=10?'📊 Top 10 — keep grinding!':'Keep earning XP to climb higher! ⬆️'}</span>
+      </div>
+    `;
+    document.getElementById('lbCard').insertBefore(banner, document.getElementById('lbCard').firstChild.nextSibling);
+  }
+
+  // Rows
+  const rowsEl = document.getElementById('lbRows');
+  rowsEl.innerHTML = '';
+  lb.slice(0, 15).forEach((u, i) => {
+    const pos   = i + 1;
+    const isYou = u.isYou;
+    const inf   = getLevelInfo(u.xp);
+    const rankClass = pos===1?'r1':pos===2?'r2':pos===3?'r3':'';
+    const rankIcon  = pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos;
+    const stickers  = isYou ? getUnlocked().length : Math.max(0, Math.floor(u.xp / 150));
+
+    const row = document.createElement('div');
+    row.className = 'lb-row' + (isYou ? ' you' : '');
+    row.innerHTML = `
+      <div class="lb-rank ${rankClass}">${rankIcon}</div>
+      <div class="lb-user">
+        <span class="lb-avatar">${u.avatar||'🦊'}</span>
+        <span class="lb-name">${u.username}${isYou?'<span class="lb-you-tag">YOU</span>':''}</span>
+      </div>
+      <div class="lb-xp">${u.xp.toLocaleString()}</div>
+      <div class="lb-level">Lv ${inf.level}</div>
+      <div class="lb-stickers">${stickers} 🏅</div>
+    `;
+    rowsEl.appendChild(row);
+  });
+
+  // Leaderboard sticker checks
+  _checkLeaderboardStickers && _checkLeaderboardStickers();
+}
+// expose so shared.js can call it
+window.renderLeaderboard = renderLeaderboard;
+
+// ── Sticker grid renderer ──────────────────────────
+function renderStickerGrid() {
+  const unlocked = getUnlocked();
+  const grid = document.getElementById('stickerGrid');
+  grid.innerHTML = '';
+  STICKERS.forEach(s => {
+    const locked = !unlocked.includes(s.id);
+    const el = document.createElement('div');
+    el.className = 'sticker-item ' + (locked ? 'locked' : 'unlocked');
+    el.title = locked ? `🔒 ${s.name}: ${s.desc}` : `✅ ${s.name} — ${s.desc}`;
+    el.innerHTML = `<span class="sticker-emoji">${locked ? '🔒' : s.emoji}</span><div class="sticker-name">${s.name}</div>`;
+    grid.appendChild(el);
+  });
+  document.getElementById('stickerCount').textContent = `(${unlocked.length}/${STICKERS.length})`;
+}
+window.renderStickerGrid = renderStickerGrid;
+
+// ── Refresh all UI ─────────────────────────────────
+function refreshUI() {
+  const xp      = getXP();
+  const inf     = getLevelInfo(xp);
+  const pct     = Math.round((inf.progress / inf.needed) * 100);
+  const unlocked = getUnlocked();
+  const visits  = MW.get('visits', {});
+  const total   = Object.values(visits).reduce((a,b)=>a+b,0);
+  const pages   = Object.keys(visits).filter(k=>visits[k]>0).length;
+  const rank    = getUserRank();
+
+  // Level card
+  document.getElementById('bigLevelNum').textContent = inf.level;
+  document.getElementById('bigXpBar').style.width    = pct + '%';
+  document.getElementById('bigXpLabel').textContent  = `${inf.progress} / ${inf.needed} XP to Level ${inf.level+1}`;
+  document.getElementById('cVisits').textContent     = total;
+  document.getElementById('cStickers').textContent   = unlocked.length;
+  document.getElementById('cRank').textContent       = rank || '–';
+
+  // Stats
+  document.getElementById('sXP').textContent       = xp.toLocaleString();
+  document.getElementById('sStickers').textContent = unlocked.length;
+  document.getElementById('sVisits').textContent   = total;
+  document.getElementById('sRank').textContent     = rank ? '#'+rank : '#–';
+
+  // Daily challenges
+  const gv = (visits['games']||0)>0, sv = (visits['school']||0)>0;
+  const pv = Math.min(pages,3);
+  document.getElementById('dc1bar').style.width = gv?'100%':'0%';
+  document.getElementById('dc1lbl').textContent = gv?'✅ Complete!':'0/1 Complete';
+  document.getElementById('dc2bar').style.width = sv?'100%':'0%';
+  document.getElementById('dc2lbl').textContent = sv?'✅ Complete!':'0/1 Complete';
+  document.getElementById('dc3bar').style.width = Math.round((pv/3)*100)+'%';
+  document.getElementById('dc3lbl').textContent = pv>=3?'✅ Complete!':pv+'/3 Pages';
+
+  // Sidebar footer
+  document.getElementById('sideVisits').textContent = `🌟 ${total} total visits`;
+
+  renderLeaderboard();
+  renderStickerGrid();
+}
+
+// ── Daily Bonus ────────────────────────────────────
+function claimBonus() {
+  const last  = MW.get('last_bonus', 0);
+  const dayMs = 86400000;
+  if (Date.now() - last < dayMs) {
+    const hrs = Math.ceil((dayMs - (Date.now()-last)) / 3600000);
+    showToast(`Come back in ${hrs}h for your next bonus!`, '⏰');
+    return;
+  }
+  MW.set('last_bonus', Date.now());
+  const bonus = 25 + Math.floor(Math.random() * 26);
+  setTimeout(() => { addXP(bonus, 'Daily Bonus'); refreshUI(); }, 200);
+  document.getElementById('bonusArrow').textContent = '✅';
+}
+
+// Initial render
+refreshUI();
+</script>
+</body>
+</html>

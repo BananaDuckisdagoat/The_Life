@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wave Creator — MyWorld</title>
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="wave-creator.css">
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">🌟 MyWorld</div>
+  <div class="sidebar-tagline">Your Personal Space</div>
+  <div class="sidebar-level">
+    <span class="level-badge">⭐ Level 1</span>
+    <div class="xp-bar-wrap"><div class="xp-bar" style="width:0%"></div></div>
+    <div class="xp-text">0 / 80 XP</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html"        class="nav-link"        data-page="home">   <span class="nav-icon">🏠</span><span>Home</span></a></li>
+    <li><a href="games.html"        class="nav-link"        data-page="games">  <span class="nav-icon">🎮</span><span>Games</span></a></li>
+    <li><a href="chess.html"        class="nav-link"        data-page="chess">  <span class="nav-icon">♟️</span><span>Chess</span></a></li>
+    <li><a href="school-life.html"  class="nav-link"        data-page="school"> <span class="nav-icon">📚</span><span>School Life</span></a></li>
+    <li><a href="fun-zone.html"     class="nav-link"        data-page="funzone"><span class="nav-icon">🎉</span><span>Fun Zone</span></a></li>
+    <li><a href="about.html"        class="nav-link"        data-page="about">  <span class="nav-icon">👋</span><span>About Me</span></a></li>
+    <li><a href="wave-creator.html" class="nav-link active" data-page="wave">   <span class="nav-icon">🌊</span><span>Wave Creator</span></a></li>
+  </ul>
+  <div class="sidebar-footer">Made with ❤️ just for you!</div>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<main class="main" style="padding:0;">
+<div class="wc-page">
+
+  <!-- ─── TOP TOOLBAR ─── -->
+  <div class="wc-toolbar">
+    <div class="wc-toolbar-title">🌊 Wave Creator</div>
+    <div class="wc-toolbar-sep"></div>
+    <button class="wc-tab active" data-section="editor"    onclick="wcShowSection('editor')">✏️ Editor</button>
+    <button class="wc-tab"        data-section="my-levels" onclick="wcShowSection('my-levels')">📁 My Levels</button>
+    <button class="wc-tab"        data-section="community" onclick="wcShowSection('community')">🌍 Community</button>
+    <button class="wc-tab"        data-section="profile"   onclick="wcShowSection('profile')">👤 Profile</button>
+    <div class="wc-toolbar-sep"></div>
+    <!-- Undo / Redo -->
+    <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px" onclick="wcUndo()" title="Undo (Ctrl+Z)">↩️ Undo</button>
+    <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px" onclick="wcRedo()" title="Redo (Ctrl+Y)">↪️ Redo</button>
+    <!-- Level name -->
+    <input id="wc-level-name" class="wc-prop-input" style="width:160px;padding:6px 10px"
+           value="My Wave Level" placeholder="Level name…">
+    <button class="btn btn-primary" style="padding:6px 14px;font-size:12px" onclick="wcOpenSave()">💾 Save</button>
+    <button class="btn btn-secondary" style="padding:6px 14px;font-size:12px" onclick="wcRunAIAnalysis()" title="AI analyses your level and checks if the difficulty matches">🤖 Analyze</button>
+    <button class="btn btn-success" style="padding:6px 14px;font-size:12px" onclick="wcUploadLevel()" title="Beat your own level to unlock uploading! 🏆">⬆️ Upload 🔒</button>
+  </div>
+
+  <!-- ─── EDITOR SECTION ─── -->
+  <div id="section-editor" class="wc-section active">
+    <div class="wc-workspace">
+
+      <!-- Object palette + tools -->
+      <div class="wc-palette">
+        <!-- Tools -->
+        <div class="wc-palette-title">Tools</div>
+        <div class="wc-tools">
+          <div class="wc-tool-btn active" id="tool-select" onclick="wcSetTool('select')">🖱️ Select</div>
+          <div class="wc-tool-btn" id="tool-place"  onclick="wcSetTool('place')">🖊️ Place</div>
+          <div class="wc-tool-btn" id="tool-erase"  onclick="wcSetTool('erase')">🧹 Erase</div>
+          <div class="wc-tool-btn" id="tool-fill"   onclick="wcSetTool('fill')">🪣 Fill</div>
+        </div>
+
+        <!-- Objects -->
+        <div class="wc-palette-title">Blocks</div>
+        <div class="wc-obj-grid" id="wc-obj-grid-blocks"></div>
+
+        <div class="wc-palette-title" style="margin-top:8px">Hazards</div>
+        <div class="wc-obj-grid" id="wc-obj-grid-hazards"></div>
+
+        <div class="wc-palette-title" style="margin-top:8px">Specials</div>
+        <div class="wc-obj-grid" id="wc-obj-grid-specials"></div>
+
+        <div class="wc-palette-title" style="margin-top:8px">Decor</div>
+        <div class="wc-obj-grid" id="wc-obj-grid-decor"></div>
+
+        <div class="wc-palette-title" style="margin-top:8px">Triggers</div>
+        <div class="wc-obj-grid" id="wc-obj-grid-triggers"></div>
+
+        <div class="wc-palette-title" style="margin-top:8px">Level</div>
+        <div class="wc-obj-grid" id="wc-obj-grid-level"></div>
+
+        <!-- Colour -->
+        <div class="wc-palette-title" style="margin-top:8px">Color</div>
+        <div class="wc-color-row" id="wc-color-row"></div>
+
+        <!-- Layers -->
+        <div class="wc-palette-title" style="margin-top:8px">Layers</div>
+        <div id="wc-layers"></div>
+
+        <!-- Grid size -->
+        <div class="wc-palette-title" style="margin-top:8px">Grid</div>
+        <select class="wc-prop-select" id="wc-grid-size" onchange="wcSetGridSize(+this.value)">
+          <option value="20">20px (Fine)</option>
+          <option value="30" selected>30px (Normal)</option>
+          <option value="40">40px (Large)</option>
+        </select>
+      </div>
+
+      <!-- Canvas -->
+      <div class="wc-canvas-wrap" id="wc-canvas-wrap">
+        <canvas id="wc-canvas"></canvas>
+
+        <!-- Horizontal scrollbar -->
+        <div id="wc-hscroll-track" style="
+          position:absolute;bottom:0;left:0;right:0;height:12px;
+          background:rgba(0,0,0,.35);border-top:1px solid rgba(0,229,255,.12);
+          cursor:default;user-select:none;display:none">
+          <div id="wc-hscroll-thumb" style="
+            position:absolute;top:2px;height:8px;min-width:40px;
+            background:rgba(0,229,255,.45);border-radius:99px;cursor:grab;
+            transition:background .15s">
+          </div>
+        </div>
+
+        <!-- Overlays -->
+        <div class="wc-canvas-overlay">
+          <div class="wc-canvas-badge" id="wc-obj-count">Objects: 0</div>
+          <div class="wc-canvas-badge" id="wc-zoom-label">Zoom: 100%</div>
+          <div class="wc-canvas-badge" id="wc-cursor-pos">0, 0</div>
+        </div>
+
+        <!-- Zoom controls -->
+        <div class="wc-zoom-controls">
+          <button class="wc-zoom-btn" onclick="wcZoom(1.2)" title="Zoom in">+</button>
+          <button class="wc-zoom-btn" onclick="wcZoom(1/1.2)" title="Zoom out">−</button>
+          <button class="wc-zoom-btn" onclick="wcResetZoom()" title="Reset zoom">⊙</button>
+        </div>
+
+        <!-- Game overlay (death / win screen) -->
+        <div class="wc-game-overlay" id="wc-game-overlay">
+          <div class="wc-overlay-title" id="wc-overlay-title" style="color:#ff6b6b">💀 You Died!</div>
+          <div class="wc-overlay-sub"   id="wc-overlay-sub">Reached 0%</div>
+          <div class="wc-overlay-btns">
+            <button class="wc-play-btn wc-play-btn-go"   onclick="wcRestartPlay()">▶ Retry</button>
+            <button class="wc-play-btn wc-play-btn-stop" onclick="wcStopPlay()">■ Edit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Properties panel -->
+      <div class="wc-props">
+        <div class="wc-props-title">Properties</div>
+
+        <!-- Selection info -->
+        <div id="wc-no-sel" style="font-size:11px;color:rgba(200,200,255,.4);font-weight:800">
+          Select an object to edit its properties.
+        </div>
+        <div id="wc-sel-props" style="display:none">
+          <div class="wc-prop-row">
+            <div class="wc-prop-label">Type</div>
+            <div id="wc-prop-type" style="font-size:12px;font-weight:800;color:#00e5ff"></div>
+          </div>
+          <div class="wc-prop-row">
+            <div class="wc-prop-label">Rotation (°)</div>
+            <input class="wc-prop-input" type="number" id="wc-prop-rot" min="0" max="360" step="45"
+                   value="0" oninput="wcPropChange('rot',+this.value)">
+          </div>
+          <div class="wc-prop-row">
+            <div class="wc-prop-label">Scale</div>
+            <input class="wc-prop-input" type="number" id="wc-prop-scale" min="0.5" max="3" step="0.25"
+                   value="1" oninput="wcPropChange('scale',+this.value)">
+          </div>
+          <div class="wc-prop-row">
+            <div class="wc-prop-label">Color</div>
+            <input class="wc-prop-input" type="color" id="wc-prop-color" value="#00e5ff"
+                   oninput="wcPropChange('color',this.value)" style="padding:2px;height:30px;cursor:pointer">
+          </div>
+          <div class="wc-prop-row" id="wc-prop-speed-row" style="display:none">
+            <div class="wc-prop-label">Speed mult</div>
+            <select class="wc-prop-select" id="wc-prop-speed" onchange="wcPropChange('speed',+this.value)">
+              <option value="0.5">0.5× Slow</option>
+              <option value="1" selected>1× Normal</option>
+              <option value="1.5">1.5× Fast</option>
+              <option value="2">2× Faster</option>
+              <option value="3">3× Max</option>
+            </select>
+          </div>
+          <div class="wc-prop-row" id="wc-prop-grav-row" style="display:none">
+            <div class="wc-prop-label">Gravity dir</div>
+            <select class="wc-prop-select" id="wc-prop-grav" onchange="wcPropChange('grav',this.value)">
+              <option value="down" selected>Down</option>
+              <option value="up">Up (flip)</option>
+            </select>
+          </div>
+
+          <div class="wc-prop-row" id="wc-prop-group-row">
+            <div class="wc-prop-label">Group ID</div>
+            <input class="wc-prop-input" type="number" id="wc-prop-group" min="0" max="9" step="1"
+                   value="0" title="0 = no group. Objects in the same group can be moved by triggers."
+                   oninput="wcPropChange('group',+this.value)" style="width:55px;text-align:center">
+          </div>
+
+          <div id="wc-prop-trigger-section" style="display:none">
+            <div style="font-size:10px;font-weight:800;color:#c084fc;margin:6px 0 4px;text-transform:uppercase;letter-spacing:.5px">Trigger Settings</div>
+            <div class="wc-prop-row">
+              <div class="wc-prop-label">Target Group</div>
+              <input class="wc-prop-input" type="number" id="wc-prop-tgt-group" min="1" max="9" step="1"
+                     value="1" oninput="wcPropChange('targetGroup',+this.value)" style="width:55px;text-align:center">
+            </div>
+            <div class="wc-prop-row">
+              <div class="wc-prop-label">Duration (s)</div>
+              <input class="wc-prop-input" type="number" id="wc-prop-trig-dur" min="0.05" max="10" step="0.1"
+                     value="1" oninput="wcPropChange('duration',+this.value)" style="width:55px;text-align:center">
+            </div>
+            <div class="wc-prop-row" id="wc-prop-move-row" style="display:none">
+              <div class="wc-prop-label">Move X (tiles)</div>
+              <input class="wc-prop-input" type="number" id="wc-prop-movex" min="-50" max="50" step="1"
+                     value="0" oninput="wcPropChange('moveX',+this.value)" style="width:55px;text-align:center">
+            </div>
+            <div class="wc-prop-row" id="wc-prop-move-row-y" style="display:none">
+              <div class="wc-prop-label">Move Y (tiles)</div>
+              <input class="wc-prop-input" type="number" id="wc-prop-movey" min="-20" max="20" step="1"
+                     value="0" oninput="wcPropChange('moveY',+this.value)" style="width:55px;text-align:center">
+            </div>
+            <div class="wc-prop-row" id="wc-prop-rotate-row" style="display:none">
+              <div class="wc-prop-label">Degrees</div>
+              <input class="wc-prop-input" type="number" id="wc-prop-degrees" min="-720" max="720" step="45"
+                     value="90" oninput="wcPropChange('degrees',+this.value)" style="width:55px;text-align:center">
+            </div>
+            <div class="wc-prop-row" id="wc-prop-color-row" style="display:none">
+              <div class="wc-prop-label">Target Color</div>
+              <input class="wc-prop-input" type="color" id="wc-prop-trig-color" value="#ff0000"
+                     oninput="wcPropChange('triggerColor',this.value)" style="padding:2px;height:30px;cursor:pointer">
+            </div>
+            <div class="wc-prop-row" id="wc-prop-alpha-row" style="display:none">
+              <div class="wc-prop-label">Target Alpha</div>
+              <input class="wc-prop-input" type="number" id="wc-prop-talpha" min="0" max="1" step="0.1"
+                     value="0" oninput="wcPropChange('targetAlpha',+this.value)" style="width:55px;text-align:center">
+            </div>
+          </div>
+
+          <button class="wc-prop-btn wc-prop-btn-primary" onclick="wcDuplicateSel()">⧉ Duplicate</button>
+          <button class="wc-prop-btn wc-prop-btn-secondary" onclick="wcFlipSel()">↔ Flip H</button>
+          <button class="wc-prop-btn wc-prop-btn-danger" onclick="wcDeleteSel()">🗑 Delete</button>
+        </div>
+
+        <div class="wc-toolbar-sep" style="margin:12px 0;height:1px;width:100%"></div>
+
+        <!-- Level settings -->
+        <div class="wc-props-title">Level Settings</div>
+        <div class="wc-prop-row">
+          <div class="wc-prop-label">BG Color</div>
+          <input class="wc-prop-input" type="color" id="wc-bg-color" value="#020210"
+                 oninput="wcSetBgColor(this.value)" style="padding:2px;height:30px;cursor:pointer">
+        </div>
+        <div class="wc-prop-row">
+          <div class="wc-prop-label">Level Speed</div>
+          <select class="wc-prop-select" id="wc-lvl-speed" onchange="wcChangeSpeed(+this.value)">
+            <option value="2">Very Slow</option>
+            <option value="4" selected>Slow</option>
+            <option value="6">Normal</option>
+            <option value="9">Fast</option>
+            <option value="13">Very Fast</option>
+          </select>
+        </div>
+        <div class="wc-prop-row">
+          <div class="wc-prop-label">Start Tile</div>
+          <input class="wc-prop-input" type="number" id="wc-start-tile"
+                 min="0" max="490" step="1" value="2"
+                 title="Drag the green START line on the canvas, or type a tile number"
+                 oninput="wcSetStartTile(+this.value)" style="width:70px;text-align:center">
+        </div>
+        <div class="wc-prop-row">
+          <div class="wc-prop-label">End Tile</div>
+          <input class="wc-prop-input" type="number" id="wc-end-tile"
+                 min="10" max="500" step="5" value="120"
+                 title="Drag the red END line on the canvas, or type a tile number"
+                 oninput="wcSetEndTile(+this.value)" style="width:70px;text-align:center">
+        </div>
+        <div class="wc-prop-row">
+          <div class="wc-prop-label">Difficulty</div>
+          <select class="wc-prop-select" id="wc-lvl-diff" onchange="wcSetDifficulty(this.value)">
+            <option value="easy">Easy</option>
+            <option value="normal" selected>Normal</option>
+            <option value="hard">Hard</option>
+            <option value="insane">Insane</option>
+            <option value="demon">Demon</option>
+          </select>
+        </div>
+      </div>
+
+    </div><!-- wc-workspace -->
+
+    <!-- Preset bar -->
+    <div class="wc-preset-bar" id="wc-preset-bar">
+      <span class="wc-preset-label">⚡ Quick Start:</span>
+      <button class="wc-preset-btn" id="pre-btn-0" onclick="wcLoadPreset(0)">🌊 Neon Corridor</button>
+      <button class="wc-preset-btn" id="pre-btn-1" onclick="wcLoadPreset(1)">🌈 Rainbow Rush</button>
+      <button class="wc-preset-btn" id="pre-btn-2" onclick="wcLoadPreset(2)">🔄 Gravity Flip</button>
+      <button class="wc-preset-btn" id="pre-btn-3" onclick="wcLoadPreset(3)">🪙 Coin Heaven</button>
+      <div style="flex:1"></div>
+      <button class="wc-preset-btn wc-preset-clear" onclick="wcClearAll()">🗑️ Clear All</button>
+    </div>
+
+    <!-- Play bar -->
+    <div class="wc-play-bar">
+      <button class="wc-play-btn wc-play-btn-go"       id="wc-btn-play"     onclick="wcStartPlay(false)">▶ Test Play</button>
+      <button class="wc-play-btn wc-play-btn-practice" id="wc-btn-practice" onclick="wcStartPlay(true)">📌 Practice</button>
+      <button class="wc-play-btn wc-play-btn-stop"     id="wc-btn-stop"     onclick="wcStopPlay()" style="display:none">■ Stop</button>
+
+      <!-- Live speed control — works during play AND in editor -->
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:160px">
+        <span id="wc-speed-val" style="font-size:10px;font-weight:900;color:rgba(0,229,255,.8)">Speed: Normal (6)</span>
+        <input id="wc-speed-slider" type="range" min="1" max="13" step="1" value="4"
+               oninput="wcChangeSpeed(+this.value)"
+               style="width:100%;accent-color:#00e5ff;cursor:pointer;height:4px">
+        <div style="display:flex;justify-content:space-between;font-size:9px;font-weight:800;color:rgba(200,200,255,.35)">
+          <span>Slow</span><span>Normal</span><span>Max</span>
+        </div>
+      </div>
+
+      <div class="wc-progress-wrap">
+        <div class="wc-progress-bar" id="wc-progress-bar" style="width:0%"></div>
+      </div>
+      <span class="wc-play-stat" id="wc-pct-label">0%</span>
+      <span class="wc-play-stat" id="wc-attempts-label">Attempts: 0</span>
+      <span class="wc-play-stat" id="wc-best-label">Best: 0%</span>
+    </div>
+  </div><!-- section-editor -->
+
+  <!-- ─── MY LEVELS SECTION ─── -->
+  <div id="section-my-levels" class="wc-section" style="padding:24px">
+    <div class="page-title" style="margin-bottom:6px">📁 My Levels</div>
+    <div class="page-subtitle" style="margin-bottom:20px">Your saved wave creations</div>
+    <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="wcNewLevel()">➕ New Level</button>
+      <button class="btn btn-secondary" onclick="wcImportLevel()">📥 Import JSON</button>
+    </div>
+    <div class="grid-3" id="wc-my-levels-grid">
+      <div style="color:rgba(200,200,255,.4);font-size:13px;font-weight:800;grid-column:1/-1">
+        No saved levels yet — create your first one in the editor!
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── COMMUNITY SECTION ─── -->
+  <div id="section-community" class="wc-section" style="padding:24px">
+    <div class="page-title" style="margin-bottom:6px">🌍 Community Levels</div>
+    <div class="page-subtitle" style="margin-bottom:20px">Discover and play wave levels created by others</div>
+
+    <!-- Filter bar -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center">
+      <span style="font-size:12px;font-weight:900;color:rgba(200,200,255,.5)">Filter:</span>
+      <button class="wc-tab active" id="comm-tab-featured" onclick="wcCommTab('featured')">⭐ Featured</button>
+      <button class="wc-tab" id="comm-tab-trending"  onclick="wcCommTab('trending')">🔥 Trending</button>
+      <button class="wc-tab" id="comm-tab-newest"    onclick="wcCommTab('newest')">🆕 Newest</button>
+      <button class="wc-tab" id="comm-tab-easy"      onclick="wcCommTab('easy')">✅ Easy</button>
+      <button class="wc-tab" id="comm-tab-demon"     onclick="wcCommTab('demon')">💀 Demon</button>
+    </div>
+
+    <div class="grid-3" id="wc-community-grid"></div>
+  </div>
+
+  <!-- ─── PROFILE SECTION ─── -->
+  <div id="section-profile" class="wc-section" style="padding:24px">
+    <div class="page-title" style="margin-bottom:6px">👤 Creator Profile</div>
+    <div class="page-subtitle" style="margin-bottom:20px">Your wave creation stats and rank</div>
+
+    <div class="grid-2" style="margin-bottom:22px">
+      <!-- Rank card -->
+      <div class="card" style="border-color:rgba(0,229,255,.2)">
+        <div class="section-title">🏅 Creator Rank</div>
+        <div id="wc-rank-display" style="text-align:center;padding:20px 0">
+          <div style="font-size:48px;margin-bottom:10px">🔨</div>
+          <div class="wc-rank-badge rank-builder" style="font-size:14px;padding:6px 18px">Builder</div>
+          <div style="font-size:12px;color:rgba(200,200,255,.5);margin-top:10px;font-weight:800">
+            Create 1 level to start your journey!
+          </div>
+        </div>
+        <div id="wc-rank-progress-wrap" style="margin-top:8px">
+          <div style="font-size:10px;font-weight:900;color:rgba(200,200,255,.5);margin-bottom:4px">
+            Creator XP Progress
+          </div>
+          <div style="background:rgba(255,255,255,.08);border-radius:99px;height:8px;overflow:hidden">
+            <div id="wc-creator-xp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#00e5ff,#a855f7);border-radius:99px;transition:width .6s ease"></div>
+          </div>
+          <div id="wc-creator-xp-label" style="font-size:10px;color:rgba(200,200,255,.5);font-weight:800;margin-top:3px">0 / 100 Creator XP</div>
+        </div>
+      </div>
+
+      <!-- Stats card -->
+      <div class="card">
+        <div class="section-title">📊 Stats</div>
+        <div class="grid-2" style="gap:10px">
+          <div class="stat-card">
+            <div class="stat-num" id="wc-stat-levels" style="color:#00e5ff">0</div>
+            <div class="stat-label">Levels Created</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="wc-stat-uploads" style="color:#a855f7">0</div>
+            <div class="stat-label">Uploaded</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="wc-stat-likes" style="color:#ff6b6b">0</div>
+            <div class="stat-label">Likes Earned</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="wc-stat-plays" style="color:#ffe66d">0</div>
+            <div class="stat-label">Plays Received</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="wc-stat-beaten" style="color:#22c55e">0</div>
+            <div class="stat-label">Levels Beaten</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="wc-stat-cxp" style="color:#fb923c">0</div>
+            <div class="stat-label">Creator XP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- XP rewards breakdown -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="section-title">⚡ XP Rewards</div>
+      <div id="wc-xp-list"></div>
+    </div>
+
+    <!-- Creator ranks breakdown -->
+    <div class="card">
+      <div class="section-title">🏆 Creator Ranks</div>
+      <div id="wc-ranks-list"></div>
+    </div>
+  </div>
+
+</div><!-- wc-page -->
+</main>
+
+<!-- ─── AI DIFFICULTY MODAL ─── -->
+<div class="wc-modal-bg" id="wc-ai-modal">
+  <div class="wc-modal" style="width:480px">
+    <div class="wc-modal-title" id="wc-ai-modal-title">🤖 AI Difficulty Check</div>
+
+    <!-- Verdict banner -->
+    <div id="wc-ai-verdict" style="border-radius:12px;padding:12px 16px;margin-bottom:16px;font-weight:800;font-size:14px;text-align:center"></div>
+
+    <!-- Meter -->
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:rgba(200,200,255,.5);margin-bottom:4px">
+        <span>EASY</span><span>NORMAL</span><span>HARD</span><span>INSANE</span><span>DEMON</span>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:99px;height:10px;position:relative">
+        <div id="wc-ai-bar" style="height:100%;border-radius:99px;transition:width .4s;position:absolute;top:0;left:0"></div>
+        <div id="wc-ai-needle" style="position:absolute;top:-4px;width:3px;height:18px;background:#fff;border-radius:2px;transform:translateX(-50%);transition:left .4s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(200,200,255,.4);margin-top:3px">
+        <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+      </div>
+    </div>
+
+    <!-- Stats grid -->
+    <div id="wc-ai-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px"></div>
+
+    <!-- Tips -->
+    <div id="wc-ai-tips" style="font-size:12px;color:rgba(200,200,255,.7);line-height:1.6;margin-bottom:16px"></div>
+
+    <!-- Difficulty picker -->
+    <div id="wc-ai-pick-row" style="display:none;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:800;color:#ffe66d;margin-bottom:6px">👆 Change difficulty to match your level:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="wc-ai-diff-buttons"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-secondary" onclick="document.getElementById('wc-ai-modal').classList.remove('open')">✕ Close</button>
+      <button class="btn btn-primary" id="wc-ai-upload-btn" style="display:none" onclick="wcAIConfirmUpload()">⬆️ Upload Anyway</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SAVE MODAL ─── -->
+<div class="wc-modal-bg" id="wc-save-modal">
+  <div class="wc-modal">
+    <div class="wc-modal-title">💾 Save Level</div>
+    <div class="wc-prop-row">
+      <div class="wc-prop-label">Level Name</div>
+      <input class="wc-prop-input" id="wc-save-name" placeholder="Enter level name…" maxlength="40">
+    </div>
+    <div class="wc-prop-row">
+      <div class="wc-prop-label">Description (optional)</div>
+      <input class="wc-prop-input" id="wc-save-desc" placeholder="A short description…" maxlength="80">
+    </div>
+    <div class="wc-prop-row">
+      <div class="wc-prop-label">Difficulty</div>
+      <select class="wc-prop-select" id="wc-save-diff">
+        <option value="easy">Easy</option>
+        <option value="normal" selected>Normal</option>
+        <option value="hard">Hard</option>
+        <option value="insane">Insane</option>
+        <option value="demon">Demon</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" style="flex:1" onclick="wcSaveLevel()">💾 Save</button>
+      <button class="btn btn-secondary" onclick="wcCloseSave()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── LEVEL PLAY MODAL ─── -->
+<div class="wc-modal-bg" id="wc-play-modal">
+  <div class="wc-modal" style="width:460px">
+
+    <!-- Fullscreen HUD (shown only in fullscreen mode) -->
+    <div class="wc-play-hud">
+      <span id="wc-play-hud-title" style="font-family:'Fredoka One',cursive;font-size:16px;color:#fff;flex:0 0 auto"></span>
+      <div style="flex:1;background:rgba(255,255,255,.12);border-radius:99px;height:6px;overflow:hidden">
+        <div id="wc-play-modal-bar2" style="height:100%;width:0%;background:linear-gradient(90deg,#00e5ff,#a855f7);border-radius:99px;transition:width .1s"></div>
+      </div>
+      <span id="wc-play-modal-pct2" style="font-size:12px;font-weight:900;color:#00e5ff;flex:0 0 auto">0%</span>
+      <button class="btn btn-primary" style="padding:4px 10px;font-size:12px" onclick="wcPlayModalRetry()">▶ Retry</button>
+      <button class="btn btn-success" style="padding:4px 10px;font-size:12px" onclick="wcLikeLevel()">❤️</button>
+      <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px" onclick="wcTogglePlayFullscreen()">⊡ Exit</button>
+      <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px" onclick="wcClosePlayModal()">✕</button>
+    </div>
+
+    <!-- Normal (windowed) UI -->
+    <div class="wc-play-normal-ui">
+      <div class="wc-modal-title" id="wc-play-modal-title">🌊 Play Level</div>
+      <div id="wc-play-modal-body" style="font-size:13px;color:rgba(200,200,255,.7);font-weight:700;margin-bottom:16px"></div>
+    </div>
+
+    <canvas id="wc-play-canvas" style="width:100%;border-radius:12px;border:1px solid rgba(0,229,255,.2)"></canvas>
+
+    <!-- Normal (windowed) bottom controls -->
+    <div class="wc-play-normal-ui">
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+        <div style="flex:1;background:rgba(255,255,255,.08);border-radius:99px;height:8px;overflow:hidden">
+          <div id="wc-play-modal-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#00e5ff,#a855f7);border-radius:99px;transition:width .1s"></div>
+        </div>
+        <span id="wc-play-modal-pct" style="font-size:12px;font-weight:900;color:#00e5ff">0%</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary" id="wc-play-modal-retry" onclick="wcPlayModalRetry()">▶ Retry</button>
+        <button class="btn btn-secondary" onclick="wcClosePlayModal()">✕ Close</button>
+        <button class="btn btn-success" id="wc-play-modal-like" onclick="wcLikeLevel()">❤️ Like</button>
+        <button class="btn btn-secondary" onclick="wcTogglePlayFullscreen()" title="Fullscreen">⛶ Fullscreen</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─── IMPORT MODAL ─── -->
+<div class="wc-modal-bg" id="wc-import-modal">
+  <div class="wc-modal">
+    <div class="wc-modal-title">📥 Import Level JSON</div>
+    <div class="wc-prop-row">
+      <div class="wc-prop-label">Paste JSON below</div>
+      <textarea class="wc-prop-input" id="wc-import-json"
+        style="height:120px;resize:vertical;font-family:monospace;font-size:11px"
+        placeholder='{"name":"…","objects":[…]}'></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="btn btn-primary" style="flex:1" onclick="wcDoImport()">Import</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('wc-import-modal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script src="wave-creator.js"></script>
+</body>
+</html>

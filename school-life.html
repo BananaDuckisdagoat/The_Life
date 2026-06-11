@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MyWorld — School Life</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Tabs */
+.grade-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+.grade-tab{
+  padding:9px 20px;border-radius:99px;font-weight:900;font-size:13px;
+  cursor:pointer;border:2px solid transparent;transition:var(--ease);
+  background:rgba(255,255,255,.07);color:var(--text-dim);
+}
+.grade-tab:hover{background:rgba(255,255,255,.13);color:var(--text);}
+.grade-tab.active{background:rgba(255,230,109,.18);border-color:var(--yellow);color:var(--yellow);}
+
+/* Timeline */
+.timeline{position:relative;padding-left:32px;}
+.timeline::before{
+  content:'';position:absolute;left:10px;top:0;bottom:0;
+  width:2px;background:linear-gradient(180deg,var(--purple),var(--pink),rgba(255,255,255,.05));
+}
+.tl-item{
+  position:relative;margin-bottom:20px;
+  animation:fadeUp .4s ease both;
+}
+.tl-dot{
+  position:absolute;left:-27px;top:14px;
+  width:14px;height:14px;border-radius:50%;
+  border:2px solid var(--yellow);background:var(--bg);
+  box-shadow:0 0 10px rgba(255,230,109,.4);
+}
+.tl-card{
+  background:var(--card-bg);border:1px solid var(--card-border);
+  border-radius:14px;padding:16px;transition:var(--ease);
+}
+.tl-card:hover{border-color:rgba(255,230,109,.3);transform:translateX(4px);}
+.tl-date{font-size:11px;color:var(--text-dim);font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.tl-title{font-family:'Fredoka One',cursive;font-size:17px;margin-bottom:5px;}
+.tl-body{font-size:13px;color:var(--text-dim);font-weight:700;line-height:1.6;}
+.tl-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.tl-tag{
+  font-size:10px;font-weight:900;padding:3px 10px;border-radius:99px;
+  background:rgba(255,230,109,.1);color:var(--yellow);border:1px solid rgba(255,230,109,.25);
+}
+.tl-emoji{position:absolute;right:14px;top:14px;font-size:22px;}
+.tl-photo{
+  margin-top:10px;border-radius:10px;overflow:hidden;
+  background:rgba(255,255,255,.04);padding:8px;text-align:center;font-size:48px;
+  line-height:1;
+}
+
+/* Add Memory */
+.add-card{
+  background:linear-gradient(135deg,rgba(255,230,109,.1),rgba(251,146,60,.06));
+  border:2px dashed rgba(255,230,109,.35);border-radius:16px;padding:20px;margin-bottom:24px;
+}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:12px;font-weight:900;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.form-input,.form-textarea,.form-select{
+  width:100%;padding:10px 14px;border-radius:10px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+  color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;
+  transition:var(--ease);outline:none;
+}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--yellow);background:rgba(255,255,255,.11);}
+.form-textarea{resize:vertical;min-height:80px;}
+.form-select option{background:#1a1a3e;color:var(--text);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* Stats bar */
+.grade-stats{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.grade-stat{
+  flex:1;min-width:100px;padding:12px;border-radius:12px;text-align:center;
+  background:var(--card-bg);border:1px solid var(--card-border);
+}
+.gs-num{font-family:'Fredoka One',cursive;font-size:24px;color:var(--yellow);}
+.gs-label{font-size:10px;font-weight:900;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;}
+
+/* Photo wall */
+.photo-wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin-top:14px;}
+.photo-item{
+  aspect-ratio:1;border-radius:12px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;font-size:40px;
+  cursor:pointer;transition:var(--ease);position:relative;overflow:hidden;
+}
+.photo-item:hover{transform:scale(1.06);border-color:rgba(255,230,109,.4);}
+.photo-label{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(0,0,0,.6);font-size:9px;font-weight:900;
+  text-align:center;padding:3px;opacity:0;transition:var(--ease);
+}
+.photo-item:hover .photo-label{opacity:1;}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-dim);}
+.empty-state .es-icon{font-size:52px;display:block;margin-bottom:10px;}
+.empty-state p{font-weight:800;font-size:14px;}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">🌟 MyWorld</div>
+  <div class="sidebar-tagline">Your Personal Space</div>
+  <div class="sidebar-level">
+    <span class="level-badge">⭐ Level 1</span>
+    <div class="xp-bar-wrap"><div class="xp-bar" style="width:0%"></div></div>
+    <div class="xp-text">0 / 80 XP</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html"       class="nav-link"         data-page="home">   <span class="nav-icon">🏠</span><span>Home</span></a></li>
+    <li><a href="games.html"       class="nav-link"         data-page="games">  <span class="nav-icon">🎮</span><span>Games</span></a></li>
+    <li><a href="chess.html"       class="nav-link"         data-page="chess">  <span class="nav-icon">♟️</span><span>Chess</span></a></li>
+    <li><a href="school-life.html" class="nav-link active"  data-page="school"> <span class="nav-icon">📚</span><span>School Life</span></a></li>
+    <li><a href="fun-zone.html"    class="nav-link"         data-page="funzone"><span class="nav-icon">🎉</span><span>Fun Zone</span></a></li>
+    <li><a href="about.html"        class="nav-link"         data-page="about">  <span class="nav-icon">👋</span><span>About Me</span></a></li>
+    <li><a href="wave-creator.html" class="nav-link"         data-page="wave">   <span class="nav-icon">🌊</span><span>Wave Creator</span></a></li>
+  </ul>
+  <div class="sidebar-footer">Made with ❤️ just for you!</div>
+</nav>
+
+<main class="main">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+    <div>
+      <h1 class="page-title" style="background:linear-gradient(135deg,#ffe66d,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">📚 School Life</h1>
+      <p class="page-subtitle">Your memories, highlights, and journey through each grade ✨</p>
+    </div>
+    <button class="btn btn-primary" onclick="toggleAddForm()">➕ Add Memory</button>
+  </div>
+
+  <!-- Add Memory Form -->
+  <div class="add-card" id="addForm" style="display:none">
+    <div class="section-title" style="margin-bottom:14px">📝 Add a New Memory</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Grade</label>
+        <select class="form-select" id="memGrade">
+          <option value="6">6th Grade</option>
+          <option value="7">7th Grade</option>
+          <option value="8">8th Grade</option>
+          <option value="9">9th Grade</option>
+          <option value="10">10th Grade</option>
+          <option value="11">11th Grade</option>
+          <option value="12">12th Grade</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" type="date" id="memDate">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input class="form-input" id="memTitle" placeholder="e.g. Won the Science Fair! 🏆">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="memCat">
+          <option>🏆 Achievement</option>
+          <option>👨‍🏫 Class</option>
+          <option>🎭 Event</option>
+          <option>🤝 Friends</option>
+          <option>⚽ Sports</option>
+          <option>🎨 Arts</option>
+          <option>📝 Exam</option>
+          <option>🏕️ Trip</option>
+          <option>😂 Funny Moment</option>
+          <option>💡 Discovery</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Memory / Story</label>
+      <textarea class="form-textarea" id="memBody" placeholder="Tell the story of this memory..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Emoji / Photo Icon</label>
+        <input class="form-input" id="memEmoji" placeholder="🎉" maxlength="4" style="font-size:22px">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tags (comma separated)</label>
+        <input class="form-input" id="memTags" placeholder="science, win, friends">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" onclick="saveMemory()">💾 Save Memory</button>
+      <button class="btn btn-secondary" onclick="toggleAddForm()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Grade Tabs -->
+  <div class="grade-tabs" id="gradeTabs"></div>
+
+  <!-- Grade Stats -->
+  <div class="grade-stats" id="gradeStats"></div>
+
+  <!-- Timeline -->
+  <div id="timelineWrap">
+    <div class="timeline" id="timeline"></div>
+  </div>
+
+  <!-- Photo Wall -->
+  <div id="photoSection" style="margin-top:28px">
+    <div class="section-title">📸 Memory Wall</div>
+    <div class="photo-wall" id="photoWall"></div>
+  </div>
+</main>
+
+<script src="shared.js"></script>
+<script>
+recordVisit('school');
+
+const GRADES = [6,7,8,9,10,11,12];
+let activeGrade = 6;
+
+// Default sample memories
+const DEFAULT_MEMORIES = [
+  {id:'d1',grade:6,date:'2022-09-05',title:'First Day of Middle School!',body:'So nervous but excited! Made 3 new friends on the very first day. My homeroom teacher is super cool.',emoji:'🎒',cat:'🤝 Friends',tags:['first day','middle school','nervous']},
+  {id:'d2',grade:6,date:'2022-11-14',title:'Won the Science Fair! 🏆',body:'My volcano project won first place in the school science fair. So proud! Got a ribbon and everything.',emoji:'🏆',cat:'🏆 Achievement',tags:['science','win','proud']},
+  {id:'d3',grade:6,date:'2023-03-22',title:'Field Trip to the Museum',body:'We saw dinosaur bones, a planetarium show, and ate lunch in the courtyard. Best field trip ever!',emoji:'🦕',cat:'🏕️ Trip',tags:['museum','field trip','dinosaurs']},
+  {id:'d4',grade:7,date:'2023-09-06',title:'Started 7th Grade',body:'New classes, new teachers, but same awesome friends! Got my locker right next to my best friend.',emoji:'🔐',cat:'📝 Exam',tags:['7th grade','new year']},
+  {id:'d5',grade:7,date:'2024-01-20',title:'Basketball Tournament',body:'Our team made it to the finals! We lost by 2 points but the whole school was cheering. Amazing feeling.',emoji:'🏀',cat:'⚽ Sports',tags:['basketball','sports','tournament']},
+  {id:'d6',grade:8,date:'2024-09-03',title:'8th Grade — Final Year!',body:'The big year before high school. Set a goal to maintain a 4.0 GPA. Challenge accepted! 💪',emoji:'🎯',cat:'🏆 Achievement',tags:['goals','8th grade','motivation']},
+];
+
+function loadMemories(){ return MW.get('school_memories', DEFAULT_MEMORIES); }
+function saveMemories(arr){ MW.set('school_memories', arr); }
+
+function toggleAddForm(){
+  const f = document.getElementById('addForm');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  // Set today's date
+  document.getElementById('memDate').value = new Date().toISOString().split('T')[0];
+}
+
+function saveMemory(){
+  const grade = parseInt(document.getElementById('memGrade').value);
+  const date  = document.getElementById('memDate').value;
+  const title = document.getElementById('memTitle').value.trim();
+  const body  = document.getElementById('memBody').value.trim();
+  const emoji = document.getElementById('memEmoji').value.trim() || '📌';
+  const cat   = document.getElementById('memCat').value;
+  const tags  = document.getElementById('memTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+
+  if(!title || !body){ showToast('Please add a title and memory!','⚠️'); return; }
+
+  const mem = { id: 'u'+Date.now(), grade, date: date||new Date().toISOString().split('T')[0], title, body, emoji, cat, tags };
+  const arr = loadMemories();
+  arr.unshift(mem);
+  saveMemories(arr);
+
+  unlockSticker('storyteller');
+  addXP(20, 'Memory saved!');
+  toggleAddForm();
+  // Clear form
+  ['memTitle','memBody','memEmoji','memTags'].forEach(id=>document.getElementById(id).value='');
+
+  activeGrade = grade;
+  renderAll();
+  showToast(`Memory saved! 📚`, '✅');
+}
+
+function deleteMemory(id){
+  if(!confirm('Delete this memory?')) return;
+  const arr = loadMemories().filter(m=>m.id!==id);
+  saveMemories(arr);
+  renderAll();
+}
+
+function renderAll(){
+  renderTabs();
+  renderStats();
+  renderTimeline();
+  renderPhotoWall();
+}
+
+function renderTabs(){
+  const tabs = document.getElementById('gradeTabs');
+  tabs.innerHTML = '';
+  const memories = loadMemories();
+  ['All',...GRADES].forEach(g=>{
+    const count = g==='All' ? memories.length : memories.filter(m=>m.grade===g).length;
+    const btn = document.createElement('button');
+    btn.className = 'grade-tab' + ((g==='All'?'all':g)===activeGrade?'' : '');
+    btn.innerHTML = `${g==='All'?'📋 All':`📗 Grade ${g}`} <span style="font-size:10px;opacity:.6">(${count})</span>`;
+    if((g==='All' && activeGrade==='all')||(g===activeGrade)) btn.classList.add('active');
+    btn.onclick = ()=>{ activeGrade=g==='All'?'all':g; renderAll(); };
+    tabs.appendChild(btn);
+  });
+}
+
+function renderStats(){
+  const el = document.getElementById('gradeStats');
+  const all = loadMemories();
+  const filtered = activeGrade==='all' ? all : all.filter(m=>m.grade===activeGrade);
+  const cats = [...new Set(filtered.map(m=>m.cat))].length;
+  const tags = [...new Set(filtered.flatMap(m=>m.tags))].length;
+  el.innerHTML = `
+    <div class="grade-stat"><div class="gs-num">${filtered.length}</div><div class="gs-label">Memories</div></div>
+    <div class="grade-stat"><div class="gs-num">${cats}</div><div class="gs-label">Categories</div></div>
+    <div class="grade-stat"><div class="gs-num">${tags}</div><div class="gs-label">Unique Tags</div></div>
+    <div class="grade-stat"><div class="gs-num">${all.length}</div><div class="gs-label">Total All Grades</div></div>
+  `;
+}
+
+function renderTimeline(){
+  const el = document.getElementById('timeline');
+  const all = loadMemories();
+  const filtered = (activeGrade==='all' ? all : all.filter(m=>m.grade===activeGrade))
+    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  if(!filtered.length){
+    el.innerHTML = `<div class="empty-state"><span class="es-icon">📭</span><p>No memories yet for this grade.<br>Click <strong>+ Add Memory</strong> to get started!</p></div>`;
+    return;
+  }
+
+  el.innerHTML = '';
+  filtered.forEach((m,i)=>{
+    const d = m.date ? new Date(m.date).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : '';
+    const item = document.createElement('div');
+    item.className = 'tl-item';
+    item.style.animationDelay = (i*0.06)+'s';
+    item.innerHTML = `
+      <div class="tl-dot"></div>
+      <div class="tl-card">
+        <div class="tl-emoji">${m.emoji||'📌'}</div>
+        <div class="tl-date">${d}${m.grade?' · Grade '+m.grade:''}</div>
+        <div class="tl-title">${m.title}</div>
+        <div class="tl-body">${m.body}</div>
+        <div class="tl-tags">
+          <span class="tl-tag">${m.cat||''}</span>
+          ${m.tags.map(t=>`<span class="tl-tag">#${t}</span>`).join('')}
+          <span class="tl-tag" style="cursor:pointer;color:var(--red);border-color:rgba(255,107,107,.3);margin-left:auto" onclick="deleteMemory('${m.id}')">🗑</span>
+        </div>
+      </div>
+    `;
+    el.appendChild(item);
+  });
+}
+
+function renderPhotoWall(){
+  const el = document.getElementById('photoWall');
+  const all = loadMemories();
+  const filtered = activeGrade==='all' ? all : all.filter(m=>m.grade===activeGrade);
+  if(!filtered.length){ el.innerHTML=''; return; }
+  el.innerHTML = filtered.map(m=>`
+    <div class="photo-item" title="${m.title}">
+      <span>${m.emoji||'📌'}</span>
+      <div class="photo-label">${m.title.substring(0,20)}</div>
+    </div>
+  `).join('');
+}
+
+renderAll();
+</script>
+</body>
+</html>

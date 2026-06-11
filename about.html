@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MyWorld — About Me</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── PROFILE HERO ── */
+.profile-hero{
+  background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(78,205,196,.12),rgba(96,165,250,.08));
+  border:1px solid rgba(34,197,94,.3);border-radius:24px;
+  padding:32px;margin-bottom:28px;display:flex;gap:28px;align-items:center;flex-wrap:wrap;
+  position:relative;overflow:hidden;
+}
+.profile-hero::after{
+  content:'';position:absolute;right:-60px;top:-60px;
+  width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,rgba(34,197,94,.18) 0%,transparent 70%);
+  pointer-events:none;
+}
+.avatar-wrap{
+  position:relative;flex-shrink:0;
+}
+.avatar{
+  width:120px;height:120px;border-radius:50%;
+  background:linear-gradient(135deg,#22c55e,#4ecdc4,#60a5fa);
+  display:flex;align-items:center;justify-content:center;
+  font-size:62px;box-shadow:0 8px 32px rgba(34,197,94,.35);
+  border:4px solid rgba(255,255,255,.2);
+  animation:float 3.5s ease-in-out infinite;
+  cursor:pointer;transition:var(--ease);
+}
+.avatar:hover{transform:scale(1.06);}
+.avatar-badge{
+  position:absolute;bottom:4px;right:4px;
+  background:linear-gradient(135deg,#ffe66d,#ff6b6b);
+  border-radius:50%;width:30px;height:30px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;border:2px solid var(--bg);
+}
+.profile-name{
+  font-family:'Fredoka One',cursive;font-size:38px;
+  background:linear-gradient(135deg,#22c55e,#4ecdc4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1.1;margin-bottom:4px;
+}
+.profile-handle{font-size:14px;color:var(--teal);font-weight:900;margin-bottom:10px;}
+.profile-bio{font-size:14px;color:var(--text-dim);font-weight:700;line-height:1.7;max-width:440px;}
+.profile-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;}
+.profile-chip{
+  padding:5px 14px;border-radius:99px;font-size:11px;font-weight:900;
+  background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:var(--green);
+}
+
+/* ── EDIT FORM ── */
+.edit-form{
+  background:rgba(34,197,94,.08);border:2px dashed rgba(34,197,94,.35);
+  border-radius:16px;padding:20px;margin-bottom:22px;display:none;
+}
+.form-label{display:block;font-size:11px;font-weight:900;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.form-input,.form-textarea,.form-select{
+  width:100%;padding:10px 14px;border-radius:10px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+  color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;
+  transition:var(--ease);outline:none;margin-bottom:12px;
+}
+.form-input:focus,.form-textarea:focus{border-color:var(--green);}
+.form-textarea{min-height:80px;resize:vertical;}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.avatar-picker{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.ap-btn{
+  font-size:32px;width:52px;height:52px;border-radius:12px;
+  background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.1);
+  cursor:pointer;transition:var(--ease);display:flex;align-items:center;justify-content:center;
+}
+.ap-btn:hover,.ap-btn.selected{border-color:var(--green);background:rgba(34,197,94,.15);}
+
+/* ── FAVORITE CARDS ── */
+.fav-card{
+  background:var(--card-bg);border:1px solid var(--card-border);
+  border-radius:16px;padding:16px;
+}
+.fav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px;border-radius:12px;margin-bottom:8px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+  transition:var(--ease);
+}
+.fav-item:last-child{margin-bottom:0;}
+.fav-item:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);}
+.fav-icon{font-size:24px;width:36px;text-align:center;flex-shrink:0;}
+.fav-name{font-weight:900;font-size:14px;}
+.fav-sub{font-size:11px;color:var(--text-dim);font-weight:700;}
+
+/* ── GOALS ── */
+.goal-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:12px;
+  background:var(--card-bg);border:1px solid var(--card-border);
+  margin-bottom:10px;transition:var(--ease);cursor:pointer;
+}
+.goal-item:hover{border-color:rgba(34,197,94,.3);}
+.goal-item.done{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3);}
+.goal-check{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0;
+  border:2px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  transition:var(--ease);
+}
+.goal-item.done .goal-check{background:var(--green);border-color:var(--green);}
+.goal-text{font-weight:800;font-size:14px;flex:1;}
+.goal-item.done .goal-text{text-decoration:line-through;color:var(--text-dim);}
+.goal-emoji{font-size:20px;}
+
+/* ── SKILL BARS ── */
+.skill-bar-wrap{margin-bottom:14px;}
+.skill-label{display:flex;justify-content:space-between;font-size:13px;font-weight:900;margin-bottom:6px;}
+.skill-track{background:rgba(255,255,255,.1);border-radius:99px;height:12px;overflow:hidden;}
+.skill-fill{height:100%;border-radius:99px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+
+/* ── STAT CIRCLES ── */
+.stat-circles{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+.stat-circle{
+  width:90px;height:90px;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:3px solid transparent;background:var(--card-bg);
+  text-align:center;
+}
+.sc-num{font-family:'Fredoka One',cursive;font-size:22px;line-height:1;}
+.sc-label{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);margin-top:2px;}
+
+/* ── TIMELINE ── */
+.about-tl{position:relative;padding-left:28px;}
+.about-tl::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--green),rgba(255,255,255,.05));}
+.atl-item{position:relative;margin-bottom:16px;}
+.atl-dot{position:absolute;left:-24px;top:12px;width:12px;height:12px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(34,197,94,.5);}
+.atl-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;transition:var(--ease);}
+.atl-card:hover{border-color:rgba(34,197,94,.3);transform:translateX(4px);}
+.atl-year{font-size:10px;font-weight:900;color:var(--green);text-transform:uppercase;letter-spacing:1px;}
+.atl-text{font-size:13px;font-weight:800;margin-top:2px;}
+
+/* ── MUSIC PLAYER ── */
+.music-card{
+  background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(236,72,153,.1));
+  border:1px solid rgba(168,85,247,.3);border-radius:16px;padding:18px;
+}
+.song-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px;border-radius:10px;cursor:pointer;
+  transition:var(--ease);margin-bottom:6px;
+}
+.song-item:hover{background:rgba(255,255,255,.07);}
+.song-item.playing{background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);}
+.song-icon{font-size:20px;width:30px;text-align:center;}
+.song-info{flex:1;}
+.song-name{font-weight:900;font-size:13px;}
+.song-artist{font-size:11px;color:var(--text-dim);font-weight:700;}
+.song-note{font-size:16px;}
+
+/* ── FUN PREFERENCE TILES ── */
+.pref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;}
+.pref-tile{
+  padding:14px 10px;border-radius:14px;text-align:center;
+  background:var(--card-bg);border:1px solid var(--card-border);
+  transition:var(--ease);cursor:default;
+}
+.pref-tile:hover{transform:translateY(-3px);}
+.pref-tile-icon{font-size:28px;display:block;margin-bottom:6px;}
+.pref-tile-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);}
+.pref-tile-val{font-family:'Fredoka One',cursive;font-size:14px;margin-top:3px;}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">🌟 MyWorld</div>
+  <div class="sidebar-tagline">Your Personal Space</div>
+  <div class="sidebar-level">
+    <span class="level-badge">⭐ Level 1</span>
+    <div class="xp-bar-wrap"><div class="xp-bar" style="width:0%"></div></div>
+    <div class="xp-text">0 / 80 XP</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html"       class="nav-link"         data-page="home">   <span class="nav-icon">🏠</span><span>Home</span></a></li>
+    <li><a href="games.html"       class="nav-link"         data-page="games">  <span class="nav-icon">🎮</span><span>Games</span></a></li>
+    <li><a href="chess.html"       class="nav-link"         data-page="chess">  <span class="nav-icon">♟️</span><span>Chess</span></a></li>
+    <li><a href="school-life.html" class="nav-link"         data-page="school"> <span class="nav-icon">📚</span><span>School Life</span></a></li>
+    <li><a href="fun-zone.html"    class="nav-link"         data-page="funzone"><span class="nav-icon">🎉</span><span>Fun Zone</span></a></li>
+    <li><a href="about.html"        class="nav-link active"  data-page="about">  <span class="nav-icon">👋</span><span>About Me</span></a></li>
+    <li><a href="wave-creator.html" class="nav-link"         data-page="wave">   <span class="nav-icon">🌊</span><span>Wave Creator</span></a></li>
+  </ul>
+  <div class="sidebar-footer">Made with ❤️ just for you!</div>
+</nav>
+
+<main class="main">
+
+  <!-- PROFILE HERO -->
+  <div class="profile-hero" id="profileHero">
+    <div class="avatar-wrap">
+      <div class="avatar" id="avatarDisp" onclick="toggleEdit()">🦊</div>
+      <div class="avatar-badge">✏️</div>
+    </div>
+    <div style="flex:1">
+      <div class="profile-name" id="dispName">Your Name Here</div>
+      <div class="profile-handle" id="dispHandle">@myworldkid</div>
+      <div class="profile-bio" id="dispBio">Hi! I'm a curious, creative, and adventurous person who loves gaming, learning cool facts, and having fun. This is my personal corner of the internet — welcome! 🎉</div>
+      <div class="profile-chips" id="dispChips">
+        <span class="profile-chip">🎮 Gamer</span>
+        <span class="profile-chip">♟️ Chess Fan</span>
+        <span class="profile-chip">📚 Student</span>
+        <span class="profile-chip">🌟 Explorer</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">
+      <button class="btn btn-primary" onclick="toggleEdit()">✏️ Edit Profile</button>
+      <button class="btn btn-secondary" onclick="showToast('Looking great! 😎','🌟')">👁 Preview</button>
+    </div>
+  </div>
+
+  <!-- EDIT FORM -->
+  <div class="edit-form" id="editForm">
+    <div class="section-title" style="margin-bottom:16px">✏️ Edit Your Profile</div>
+    <div class="form-label">Choose Your Avatar</div>
+    <div class="avatar-picker" id="avatarPicker">
+      🦊🐺🐻🦁🐸🐙🦋🐧🦄🐲🤖🧙
+    </div>
+    <div class="form-row-2">
+      <div>
+        <label class="form-label">Your Name</label>
+        <input class="form-input" id="editName" placeholder="Your name...">
+      </div>
+      <div>
+        <label class="form-label">Username / Handle</label>
+        <input class="form-input" id="editHandle" placeholder="@username">
+      </div>
+    </div>
+    <label class="form-label">Bio — Tell the world about yourself!</label>
+    <textarea class="form-textarea" id="editBio" placeholder="I am..."></textarea>
+    <label class="form-label">Tags / Interests (comma separated)</label>
+    <input class="form-input" id="editTags" placeholder="Gaming, Chess, Art, Sports...">
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-success" onclick="saveProfile()">💾 Save Profile</button>
+      <button class="btn btn-secondary" onclick="toggleEdit()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid-2" style="margin-bottom:22px">
+
+    <!-- SKILLS -->
+    <div class="card">
+      <div class="section-title">💪 My Skills</div>
+      <div id="skillBars"></div>
+    </div>
+
+    <!-- FAVORITES -->
+    <div class="fav-card">
+      <div class="section-title">❤️ My Favorites</div>
+      <div id="favList"></div>
+    </div>
+  </div>
+
+  <!-- GOALS -->
+  <div class="section-title">🎯 My Goals</div>
+  <div class="grid-2" style="margin-bottom:22px">
+    <div>
+      <div id="goalList"></div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <input class="form-input" id="newGoal" placeholder="Add a new goal..." style="margin-bottom:0;flex:1">
+        <button class="btn btn-primary" onclick="addGoal()">➕</button>
+      </div>
+    </div>
+
+    <!-- FUN PREFERENCES -->
+    <div>
+      <div class="section-title" style="margin-bottom:12px">⚡ Quick Stats</div>
+      <div class="pref-grid" id="prefGrid"></div>
+    </div>
+  </div>
+
+  <!-- MY JOURNEY TIMELINE + MUSIC -->
+  <div class="grid-2" style="margin-bottom:22px">
+    <div class="card">
+      <div class="section-title">🗓️ My Journey</div>
+      <div class="about-tl" id="journeyTL"></div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <input class="form-input" id="newMilestone" placeholder="Add a milestone..." style="margin-bottom:0;flex:1">
+        <button class="btn btn-secondary" onclick="addMilestone()">➕</button>
+      </div>
+    </div>
+
+    <div class="music-card">
+      <div class="section-title">🎵 My Playlist Vibes</div>
+      <p style="font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:12px">Songs I've been loving lately:</p>
+      <div id="songList"></div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <input class="form-input" id="newSong" placeholder="Song — Artist" style="margin-bottom:0;flex:1">
+        <button class="btn btn-secondary" onclick="addSong()">➕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORLD XP STATS -->
+  <div class="section-title">🏆 MyWorld Stats</div>
+  <div class="card" style="margin-bottom:22px">
+    <div class="stat-circles" id="worldStats"></div>
+  </div>
+
+</main>
+
+<script src="shared.js"></script>
+<script>
+recordVisit('about');
+
+// ─── PROFILE ─────────────────────────────
+const AVATARS = ['🦊','🐺','🐻','🦁','🐸','🐙','🦋','🐧','🦄','🐲','🤖','🧙'];
+let selectedAvatar = MW.get('avatar','🦊');
+
+function loadProfile(){
+  return MW.get('profile',{
+    name:'Your Name Here',
+    handle:'@myworldkid',
+    bio:"Hi! I'm a curious, creative, and adventurous person who loves gaming, learning cool facts, and having fun. This is my personal corner of the internet — welcome! 🎉",
+    tags:['🎮 Gamer','♟️ Chess Fan','📚 Student','🌟 Explorer'],
+    avatar:'🦊'
+  });
+}
+
+function applyProfile(){
+  const p = loadProfile();
+  selectedAvatar = p.avatar || '🦊';
+  document.getElementById('avatarDisp').textContent  = selectedAvatar;
+  document.getElementById('dispName').textContent    = p.name;
+  document.getElementById('dispHandle').textContent  = p.handle;
+  document.getElementById('dispBio').textContent     = p.bio;
+  document.getElementById('dispChips').innerHTML     = p.tags.map(t=>`<span class="profile-chip">${t}</span>`).join('');
+}
+
+function toggleEdit(){
+  const f = document.getElementById('editForm');
+  const showing = f.style.display === 'block';
+  f.style.display = showing ? 'none' : 'block';
+  if(!showing){
+    const p = loadProfile();
+    document.getElementById('editName').value   = p.name;
+    document.getElementById('editHandle').value = p.handle;
+    document.getElementById('editBio').value    = p.bio;
+    document.getElementById('editTags').value   = p.tags.join(', ');
+    buildAvatarPicker();
+  }
+}
+
+function buildAvatarPicker(){
+  const el = document.getElementById('avatarPicker');
+  el.innerHTML = '';
+  AVATARS.forEach(a=>{
+    const btn = document.createElement('button');
+    btn.className = 'ap-btn' + (a === selectedAvatar ? ' selected' : '');
+    btn.textContent = a;
+    btn.onclick = ()=>{
+      selectedAvatar = a;
+      document.querySelectorAll('.ap-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('avatarDisp').textContent = a;
+    };
+    el.appendChild(btn);
+  });
+}
+
+function saveProfile(){
+  const name   = document.getElementById('editName').value.trim() || 'Explorer';
+  const handle = document.getElementById('editHandle').value.trim() || '@myworldkid';
+  const bio    = document.getElementById('editBio').value.trim() || 'Welcome to my world!';
+  const tags   = document.getElementById('editTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  MW.set('profile',{name,handle,bio,tags,avatar:selectedAvatar});
+  applyProfile();
+  toggleEdit();
+  addXP(10,'Updated your profile!');
+  showToast('Profile saved! 🎉','✅');
+}
+
+// ─── SKILLS ──────────────────────────────
+const DEFAULT_SKILLS = [
+  {name:'Gaming',pct:85,color:'linear-gradient(90deg,#4ecdc4,#60a5fa)'},
+  {name:'Chess',pct:70,color:'linear-gradient(90deg,#a855f7,#ec4899)'},
+  {name:'Math',pct:78,color:'linear-gradient(90deg,#ffe66d,#fb923c)'},
+  {name:'Reading',pct:82,color:'linear-gradient(90deg,#22c55e,#4ecdc4)'},
+  {name:'Creativity',pct:90,color:'linear-gradient(90deg,#ec4899,#ff6b6b)'},
+  {name:'Sports',pct:65,color:'linear-gradient(90deg,#ff6b6b,#fb923c)'},
+];
+function renderSkills(){
+  const el = document.getElementById('skillBars');
+  el.innerHTML = '';
+  DEFAULT_SKILLS.forEach(s=>{
+    el.innerHTML += `
+      <div class="skill-bar-wrap">
+        <div class="skill-label"><span>${s.name}</span><span style="color:var(--text-dim)">${s.pct}%</span></div>
+        <div class="skill-track"><div class="skill-fill" data-pct="${s.pct}" style="width:0%;background:${s.color}"></div></div>
+      </div>`;
+  });
+  // Animate after render
+  setTimeout(()=>{
+    document.querySelectorAll('.skill-fill').forEach(el=>{
+      el.style.width = el.dataset.pct + '%';
+    });
+  }, 200);
+}
+
+// ─── FAVORITES ───────────────────────────
+const FAVS = [
+  {icon:'🎮',name:'Minecraft',sub:'Favorite game'},
+  {icon:'🍕',name:'Pizza',sub:'Favorite food'},
+  {icon:'📚',name:'Percy Jackson',sub:'Favorite book series'},
+  {icon:'🎵',name:'Pop & Hip-Hop',sub:'Favorite music'},
+  {icon:'🐶',name:'Dogs',sub:'Favorite animal'},
+  {icon:'🌍',name:'Traveling',sub:'Dream hobby'},
+];
+function renderFavs(){
+  document.getElementById('favList').innerHTML = FAVS.map(f=>`
+    <div class="fav-item">
+      <span class="fav-icon">${f.icon}</span>
+      <div><div class="fav-name">${f.name}</div><div class="fav-sub">${f.sub}</div></div>
+    </div>
+  `).join('');
+}
+
+// ─── GOALS ───────────────────────────────
+const DEFAULT_GOALS = [
+  {id:'g1',text:'Maintain a 4.0 GPA 📚',done:false,emoji:'📚'},
+  {id:'g2',text:'Win a chess tournament ♟️',done:false,emoji:'♟️'},
+  {id:'g3',text:'Learn to code a game 💻',done:false,emoji:'💻'},
+  {id:'g4',text:'Read 12 books this year 📖',done:false,emoji:'📖'},
+  {id:'g5',text:'Get better at art 🎨',done:false,emoji:'🎨'},
+];
+function loadGoals(){ return MW.get('about_goals', DEFAULT_GOALS); }
+function saveGoalsData(arr){ MW.set('about_goals', arr); }
+function toggleGoal(id){
+  const goals = loadGoals();
+  const g = goals.find(x=>x.id===id);
+  if(g){ g.done = !g.done; if(g.done) addXP(15,'Goal completed! 🎯'); }
+  saveGoalsData(goals);
+  renderGoals();
+}
+function addGoal(){
+  const inp = document.getElementById('newGoal');
+  const text = inp.value.trim();
+  if(!text) return;
+  const goals = loadGoals();
+  goals.unshift({id:'g'+Date.now(),text,done:false,emoji:'🎯'});
+  saveGoalsData(goals);
+  inp.value = '';
+  renderGoals();
+  showToast('Goal added!','🎯');
+}
+function deleteGoal(id){
+  saveGoalsData(loadGoals().filter(g=>g.id!==id));
+  renderGoals();
+}
+function renderGoals(){
+  const goals = loadGoals();
+  document.getElementById('goalList').innerHTML = goals.map(g=>`
+    <div class="goal-item ${g.done?'done':''}" onclick="toggleGoal('${g.id}')">
+      <div class="goal-check">${g.done?'✓':''}</div>
+      <div class="goal-text">${g.text}</div>
+      <span onclick="event.stopPropagation();deleteGoal('${g.id}')" style="cursor:pointer;font-size:14px;opacity:.4;padding:2px 6px" title="Remove">✕</span>
+    </div>
+  `).join('');
+}
+
+// ─── PREFERENCES ─────────────────────────
+const PREFS = [
+  {icon:'🌙',label:'Bedtime',val:'10:30 PM'},
+  {icon:'🎯',label:'Fav Subject',val:'Science'},
+  {icon:'🏅',label:'Sport',val:'Basketball'},
+  {icon:'🎨',label:'Hobby',val:'Drawing'},
+  {icon:'🍜',label:'Cuisine',val:'Italian'},
+  {icon:'📺',label:'Show',val:'Stranger Things'},
+  {icon:'🌈',label:'Fav Color',val:'Purple'},
+  {icon:'😂',label:'Humor',val:'Dad Jokes'},
+];
+function renderPrefs(){
+  document.getElementById('prefGrid').innerHTML = PREFS.map(p=>`
+    <div class="pref-tile">
+      <span class="pref-tile-icon">${p.icon}</span>
+      <div class="pref-tile-label">${p.label}</div>
+      <div class="pref-tile-val">${p.val}</div>
+    </div>
+  `).join('');
+}
+
+// ─── JOURNEY TIMELINE ────────────────────
+const DEFAULT_MILESTONES = [
+  {id:'m1',year:'2019',text:'Started elementary school and loved it from day one! 🎒'},
+  {id:'m2',year:'2021',text:'Got my first gaming console and became a Minecraft legend 🎮'},
+  {id:'m3',year:'2022',text:'Started middle school — so many new adventures! 🏫'},
+  {id:'m4',year:'2023',text:'Learned chess and fell completely in love with it ♟️'},
+  {id:'m5',year:'2024',text:'Won the 6th grade science fair with a solar system project 🏆'},
+  {id:'m6',year:'2025',text:'Built my own personal website — this one! 🌐'},
+];
+function loadMilestones(){ return MW.get('milestones', DEFAULT_MILESTONES); }
+function saveMilestones(arr){ MW.set('milestones', arr); }
+function addMilestone(){
+  const inp = document.getElementById('newMilestone');
+  const text = inp.value.trim();
+  if(!text) return;
+  const arr = loadMilestones();
+  arr.push({id:'m'+Date.now(), year:new Date().getFullYear().toString(), text});
+  saveMilestones(arr);
+  inp.value = '';
+  renderJourney();
+  addXP(8,'Added a milestone!');
+}
+function renderJourney(){
+  const arr = loadMilestones();
+  document.getElementById('journeyTL').innerHTML = arr.map(m=>`
+    <div class="atl-item">
+      <div class="atl-dot"></div>
+      <div class="atl-card">
+        <div class="atl-year">📅 ${m.year}</div>
+        <div class="atl-text">${m.text}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── SONGS ───────────────────────────────
+const DEFAULT_SONGS = [
+  {id:'s1',name:'Blinding Lights',artist:'The Weeknd',emoji:'🎶'},
+  {id:'s2',name:'STAY',artist:'Kid LAROI & Justin Bieber',emoji:'🎵'},
+  {id:'s3',name:'Heat Waves',artist:'Glass Animals',emoji:'🌊'},
+  {id:'s4',name:'As It Was',artist:'Harry Styles',emoji:'⭐'},
+  {id:'s5',name:'Levitating',artist:'Dua Lipa',emoji:'🚀'},
+];
+let playingSong = null;
+function loadSongs(){ return MW.get('songs', DEFAULT_SONGS); }
+function saveSongs(arr){ MW.set('songs', arr); }
+function playSong(id){
+  playingSong = playingSong === id ? null : id;
+  renderSongs();
+  if(playingSong) addXP(2,'Vibing to music! 🎵');
+}
+function addSong(){
+  const inp = document.getElementById('newSong');
+  const text = inp.value.trim();
+  if(!text) return;
+  const parts = text.split('—').map(x=>x.trim());
+  const songs = loadSongs();
+  songs.unshift({id:'s'+Date.now(), name:parts[0]||text, artist:parts[1]||'Unknown', emoji:'🎵'});
+  saveSongs(songs);
+  inp.value = '';
+  renderSongs();
+}
+function renderSongs(){
+  const songs = loadSongs();
+  document.getElementById('songList').innerHTML = songs.slice(0,6).map(s=>`
+    <div class="song-item ${playingSong===s.id?'playing':''}" onclick="playSong('${s.id}')">
+      <span class="song-icon">${playingSong===s.id?'🎵':s.emoji}</span>
+      <div class="song-info">
+        <div class="song-name">${s.name}</div>
+        <div class="song-artist">${s.artist}</div>
+      </div>
+      <span class="song-note">${playingSong===s.id?'▶':'○'}</span>
+    </div>
+  `).join('');
+}
+
+// ─── WORLD STATS ─────────────────────────
+function renderWorldStats(){
+  const xp = getXP();
+  const inf = getLevelInfo(xp);
+  const visits = MW.get('visits',{});
+  const total  = Object.values(visits).reduce((a,b)=>a+b,0);
+  const unlocked = getUnlocked();
+  const goals = loadGoals().filter(g=>g.done).length;
+
+  const stats = [
+    {num: inf.level,           label:'Level',          color:'#ffe66d', border:'rgba(255,230,109,.4)'},
+    {num: xp,                  label:'Total XP',        color:'#a855f7', border:'rgba(168,85,247,.4)'},
+    {num: total,               label:'Page Visits',     color:'#4ecdc4', border:'rgba(78,205,196,.4)'},
+    {num: unlocked.length,     label:'Stickers',        color:'#ec4899', border:'rgba(236,72,153,.4)'},
+    {num: goals,               label:'Goals Done',      color:'#22c55e', border:'rgba(34,197,94,.4)'},
+    {num: loadMilestones().length, label:'Milestones',  color:'#60a5fa', border:'rgba(96,165,250,.4)'},
+  ];
+  document.getElementById('worldStats').innerHTML = stats.map(s=>`
+    <div class="stat-circle" style="border-color:${s.border}">
+      <div class="sc-num" style="color:${s.color}">${s.num}</div>
+      <div class="sc-label">${s.label}</div>
+    </div>
+  `).join('');
+}
+
+// ─── INIT ────────────────────────────────
+applyProfile();
+renderSkills();
+renderFavs();
+renderGoals();
+renderPrefs();
+renderJourney();
+renderSongs();
+renderWorldStats();
+</script>
+</body>
+</html>

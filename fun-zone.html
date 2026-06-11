@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MyWorld — Fun Zone</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── HERO BANNER ── */
+.fz-hero{
+  background:linear-gradient(135deg,rgba(236,72,153,.25),rgba(168,85,247,.18),rgba(78,205,196,.1));
+  border:1px solid rgba(236,72,153,.3);border-radius:22px;
+  padding:28px 32px;margin-bottom:28px;text-align:center;position:relative;overflow:hidden;
+}
+.fz-floating{position:absolute;font-size:28px;pointer-events:none;animation:float 3s ease-in-out infinite;}
+
+/* ── JOKE CARD ── */
+.joke-card{
+  background:linear-gradient(135deg,rgba(255,107,107,.15),rgba(255,230,109,.08));
+  border:1px solid rgba(255,107,107,.3);border-radius:18px;padding:24px;
+  text-align:center;
+}
+.joke-q{font-family:'Fredoka One',cursive;font-size:20px;margin-bottom:14px;line-height:1.4;}
+.joke-a{
+  background:rgba(255,255,255,.07);border-radius:12px;padding:12px 16px;
+  font-family:'Fredoka One',cursive;font-size:17px;color:var(--yellow);
+  display:none;margin-bottom:14px;
+}
+.joke-a.show{display:block;animation:pop .3s cubic-bezier(.34,1.56,.64,1);}
+
+/* ── FACT CARD ── */
+.fact-card{
+  background:linear-gradient(135deg,rgba(78,205,196,.15),rgba(96,165,250,.08));
+  border:1px solid rgba(78,205,196,.3);border-radius:18px;padding:22px;
+  position:relative;overflow:hidden;
+}
+.fact-number{
+  font-family:'Fredoka One',cursive;font-size:60px;
+  position:absolute;right:16px;bottom:-10px;opacity:.08;
+}
+.fact-icon{font-size:36px;margin-bottom:8px;display:block;}
+.fact-category{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1.5px;color:var(--teal);margin-bottom:6px;}
+.fact-text{font-size:14px;font-weight:700;line-height:1.7;color:var(--text);}
+
+/* ── WOULD YOU RATHER ── */
+.wyr-card{
+  background:var(--card-bg);border:1px solid var(--card-border);border-radius:18px;padding:22px;
+}
+.wyr-title{font-family:'Fredoka One',cursive;font-size:18px;color:var(--pink);margin-bottom:16px;text-align:center;}
+.wyr-options{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;}
+.wyr-btn{
+  padding:16px 12px;border-radius:14px;font-family:'Fredoka One',cursive;font-size:15px;
+  cursor:pointer;border:2px solid transparent;transition:var(--ease);text-align:center;
+  background:rgba(255,255,255,.07);color:var(--text);line-height:1.4;
+}
+.wyr-btn:hover{transform:scale(1.03);}
+.wyr-btn.a:hover{border-color:var(--pink);background:rgba(236,72,153,.15);}
+.wyr-btn.b:hover{border-color:var(--teal);background:rgba(78,205,196,.15);}
+.wyr-btn.voted-a{border-color:var(--pink);background:rgba(236,72,153,.2);}
+.wyr-btn.voted-b{border-color:var(--teal);background:rgba(78,205,196,.2);}
+.wyr-or{font-family:'Fredoka One',cursive;font-size:18px;color:var(--text-dim);text-align:center;}
+.wyr-votes{font-size:11px;font-weight:900;color:var(--text-dim);margin-top:12px;text-align:center;}
+
+/* ── EMOJI QUIZ ── */
+.emoji-quiz{background:var(--card-bg);border:1px solid var(--card-border);border-radius:18px;padding:22px;}
+.eq-display{font-size:48px;text-align:center;margin:10px 0;letter-spacing:6px;}
+.eq-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.eq-btn{
+  padding:12px;border-radius:12px;font-weight:900;font-size:14px;
+  background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.1);
+  cursor:pointer;color:var(--text);transition:var(--ease);
+}
+.eq-btn:hover{background:rgba(255,255,255,.15);}
+.eq-btn.correct{border-color:var(--green);background:rgba(34,197,94,.2);color:var(--green);}
+.eq-btn.wrong{border-color:var(--red);background:rgba(255,107,107,.2);color:var(--red);}
+
+/* ── PERSONALITY QUIZ ── */
+.pq-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:18px;padding:22px;}
+.pq-question{font-family:'Fredoka One',cursive;font-size:18px;margin-bottom:14px;text-align:center;}
+.pq-opts{display:flex;flex-direction:column;gap:9px;}
+.pq-opt{
+  padding:12px 16px;border-radius:12px;
+  background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.08);
+  cursor:pointer;font-weight:800;font-size:13px;transition:var(--ease);
+}
+.pq-opt:hover{background:rgba(168,85,247,.18);border-color:var(--purple);color:var(--text);}
+.pq-result{
+  text-align:center;padding:20px;
+  background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(236,72,153,.12));
+  border-radius:14px;display:none;
+}
+.pq-result.show{display:block;animation:pop .4s cubic-bezier(.34,1.56,.64,1);}
+.pq-result-emoji{font-size:52px;display:block;margin-bottom:8px;}
+.pq-result-title{font-family:'Fredoka One',cursive;font-size:22px;margin-bottom:6px;}
+.pq-result-desc{font-size:13px;font-weight:700;color:var(--text-dim);line-height:1.6;}
+
+/* ── COMPLIMENT MACHINE ── */
+.compliment-card{
+  background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(78,205,196,.1));
+  border:1px solid rgba(34,197,94,.3);border-radius:18px;padding:24px;text-align:center;
+}
+.compliment-text{
+  font-family:'Fredoka One',cursive;font-size:20px;line-height:1.4;
+  color:var(--green);margin:16px 0;min-height:54px;
+}
+
+/* ── THIS OR THAT (scroll list) ── */
+.tot-item{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 16px;border-radius:14px;
+  background:var(--card-bg);border:1px solid var(--card-border);
+  margin-bottom:10px;font-size:13px;font-weight:800;
+}
+.tot-emoji{font-size:24px;flex-shrink:0;}
+.tot-fact{flex:1;color:var(--text-dim);}
+.tot-badge{
+  font-size:10px;font-weight:900;padding:3px 10px;border-radius:99px;
+  background:rgba(168,85,247,.2);color:var(--purple);border:1px solid rgba(168,85,247,.3);
+  flex-shrink:0;
+}
+
+/* ── COUNTDOWN ── */
+.countdown-display{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:14px 0;}
+.cd-unit{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;padding:14px 18px;text-align:center;min-width:72px;
+}
+.cd-num{font-family:'Fredoka One',cursive;font-size:32px;color:var(--yellow);}
+.cd-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">🌟 MyWorld</div>
+  <div class="sidebar-tagline">Your Personal Space</div>
+  <div class="sidebar-level">
+    <span class="level-badge">⭐ Level 1</span>
+    <div class="xp-bar-wrap"><div class="xp-bar" style="width:0%"></div></div>
+    <div class="xp-text">0 / 80 XP</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html"       class="nav-link"         data-page="home">   <span class="nav-icon">🏠</span><span>Home</span></a></li>
+    <li><a href="games.html"       class="nav-link"         data-page="games">  <span class="nav-icon">🎮</span><span>Games</span></a></li>
+    <li><a href="chess.html"       class="nav-link"         data-page="chess">  <span class="nav-icon">♟️</span><span>Chess</span></a></li>
+    <li><a href="school-life.html" class="nav-link"         data-page="school"> <span class="nav-icon">📚</span><span>School Life</span></a></li>
+    <li><a href="fun-zone.html"    class="nav-link active"  data-page="funzone"><span class="nav-icon">🎉</span><span>Fun Zone</span></a></li>
+    <li><a href="about.html"        class="nav-link"         data-page="about">  <span class="nav-icon">👋</span><span>About Me</span></a></li>
+    <li><a href="wave-creator.html" class="nav-link"         data-page="wave">   <span class="nav-icon">🌊</span><span>Wave Creator</span></a></li>
+  </ul>
+  <div class="sidebar-footer">Made with ❤️ just for you!</div>
+</nav>
+
+<main class="main">
+
+  <!-- HERO -->
+  <div class="fz-hero">
+    <div class="fz-floating" style="left:5%;top:20%;animation-delay:.3s">🎈</div>
+    <div class="fz-floating" style="right:8%;top:15%;animation-delay:.8s">⭐</div>
+    <div class="fz-floating" style="left:12%;bottom:15%;animation-delay:.5s">🦋</div>
+    <div class="fz-floating" style="right:15%;bottom:20%;animation-delay:1s">🌈</div>
+    <div class="fz-floating" style="left:40%;top:10%;animation-delay:.2s">✨</div>
+    <h1 class="page-title" style="background:linear-gradient(135deg,#ec4899,#a855f7,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">🎉 Fun Zone</h1>
+    <p style="color:var(--text-dim);font-size:15px;font-weight:700;margin-top:6px">Jokes · Facts · Quizzes · Challenges · Good Vibes Only! ✨</p>
+  </div>
+
+  <!-- ROW 1 -->
+  <div class="grid-2" style="margin-bottom:22px">
+
+    <!-- JOKE OF THE DAY -->
+    <div class="joke-card">
+      <div class="section-title">😂 Joke of the Day</div>
+      <div class="joke-q" id="jokeQ">Loading...</div>
+      <div class="joke-a" id="jokeA">...</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-primary" onclick="revealJoke()">💡 Reveal Punchline</button>
+        <button class="btn btn-secondary" onclick="nextJoke()">⏭ Next Joke</button>
+      </div>
+    </div>
+
+    <!-- COMPLIMENT MACHINE -->
+    <div class="compliment-card">
+      <div class="section-title">💚 Compliment Machine</div>
+      <p style="font-size:13px;color:var(--text-dim);font-weight:700;margin-bottom:4px">You deserve to hear something nice today!</p>
+      <div class="compliment-text" id="complimentText">Press the button below! 👇</div>
+      <button class="btn btn-success" onclick="getCompliment()" style="margin:0 auto;display:block">💌 Give me a compliment!</button>
+    </div>
+  </div>
+
+  <!-- FUN FACTS -->
+  <div class="section-title">🧠 Wild Facts That Will Blow Your Mind</div>
+  <div class="grid-3" id="factsGrid" style="margin-bottom:22px"></div>
+
+  <!-- ROW 2 -->
+  <div class="grid-2" style="margin-bottom:22px">
+
+    <!-- WOULD YOU RATHER -->
+    <div class="wyr-card">
+      <div class="section-title">🤔 Would You Rather?</div>
+      <div class="wyr-title" id="wyrTitle">Choose wisely...</div>
+      <div class="wyr-options">
+        <div class="wyr-btn a" id="wyrA" onclick="wyrVote('a')"></div>
+        <div class="wyr-or">OR</div>
+        <div class="wyr-btn b" id="wyrB" onclick="wyrVote('b')"></div>
+      </div>
+      <div class="wyr-votes" id="wyrVotes"></div>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn btn-secondary" onclick="nextWYR()">Next Question ⏭</button>
+      </div>
+    </div>
+
+    <!-- EMOJI QUIZ -->
+    <div class="emoji-quiz">
+      <div class="section-title">🎭 Emoji Movie Quiz</div>
+      <p style="font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:8px">What movie/show do these emojis represent?</p>
+      <div class="eq-display" id="eqDisplay"></div>
+      <div class="eq-opts" id="eqOpts"></div>
+      <div style="text-align:center;margin-top:12px">
+        <span style="font-size:12px;color:var(--text-dim);font-weight:800">Score: <strong id="eqScore">0</strong></span>
+        &nbsp;|&nbsp;
+        <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="nextEQ()">Skip ⏭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERSONALITY QUIZ -->
+  <div class="grid-2" style="margin-bottom:22px">
+    <div class="pq-card">
+      <div class="section-title">🌟 What Type of Superpower Are You?</div>
+      <div id="pqContent"></div>
+    </div>
+
+    <!-- COUNTDOWN -->
+    <div class="card">
+      <div class="section-title">⏳ Summer Countdown</div>
+      <p style="font-size:13px;color:var(--text-dim);font-weight:700;margin-bottom:10px">Days until June 1st (Summer Break)!</p>
+      <div class="countdown-display" id="countdown"></div>
+      <div style="text-align:center">
+        <button class="btn btn-secondary" onclick="setCountdown()" style="font-size:12px;padding:7px 14px">📅 Set Your Own Date</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- THIS OR THAT FUN FACTS -->
+  <div class="section-title">⚡ Crazy Facts — This or That?</div>
+  <div id="totList" style="margin-bottom:22px"></div>
+
+</main>
+
+<script src="shared.js"></script>
+<script>
+recordVisit('funzone');
+let factsRead=0;
+
+// ─── JOKES ───────────────────────────────
+const JOKES=[
+  {q:"Why don't scientists trust atoms?",a:"Because they make up everything! ⚛️"},
+  {q:"Why did the math book look sad?",a:"Because it had too many problems! 📚"},
+  {q:"What do you call a fish without eyes?",a:"A fsh! 🐟"},
+  {q:"Why can't Elsa have a balloon?",a:"Because she'd let it go! 🎈"},
+  {q:"What do you call cheese that isn't yours?",a:"Nacho cheese! 🧀"},
+  {q:"Why do bees have sticky hair?",a:"Because they use honeycombs! 🐝"},
+  {q:"What do you call a lazy kangaroo?",a:"A pouch potato! 🦘"},
+  {q:"How do you organize a space party?",a:"You planet! 🪐"},
+  {q:"What's a skeleton's least favorite room?",a:"The living room! 💀"},
+  {q:"Why did the scarecrow win an award?",a:"He was outstanding in his field! 🌾"},
+  {q:"What do you call a sleeping dinosaur?",a:"A dino-snore! 🦕"},
+  {q:"Why did the bicycle fall over?",a:"It was two-tired! 🚲"},
+  {q:"What do elves learn in school?",a:"The elf-abet! 🧝"},
+  {q:"How does the moon cut his hair?",a:"Eclipse it! 🌙"},
+  {q:"What do you call a cold puppy?",a:"A chilly dog! 🐕"},
+];
+let jokeIdx=Math.floor(Math.random()*JOKES.length);
+function showJoke(){
+  document.getElementById('jokeQ').textContent=JOKES[jokeIdx].q;
+  document.getElementById('jokeA').textContent=JOKES[jokeIdx].a;
+  document.getElementById('jokeA').classList.remove('show');
+}
+function revealJoke(){
+  document.getElementById('jokeA').classList.add('show');
+  addXP(3,'Heard a joke 😂');
+}
+function nextJoke(){jokeIdx=(jokeIdx+1)%JOKES.length;showJoke();}
+showJoke();
+
+// ─── COMPLIMENTS ─────────────────────────
+const COMPLIMENTS=[
+  "You are absolutely BRILLIANT and don't let anyone tell you otherwise! 🌟",
+  "Your smile could light up an entire room! 😊",
+  "You are one of a kind — the world is better with you in it! 🌈",
+  "You're braver than you believe and stronger than you seem! 💪",
+  "The way your mind works is truly amazing! 🧠✨",
+  "You make everyone around you feel valued and special! 🤝",
+  "Your creativity is off the charts! Keep making cool things! 🎨",
+  "You learn faster than almost anyone I know! 🚀",
+  "You have the BEST taste — in music, games, everything! 🎵",
+  "Challenges exist just so YOU can crush them! 🏆",
+  "You're going to do incredible things — I can feel it! ⭐",
+  "Your kindness is your superpower! Never stop being you! 💚",
+];
+let lastComp=-1;
+function getCompliment(){
+  let idx;
+  do{ idx=Math.floor(Math.random()*COMPLIMENTS.length); } while(idx===lastComp);
+  lastComp=idx;
+  const el=document.getElementById('complimentText');
+  el.style.opacity='0';el.style.transform='scale(.9)';
+  setTimeout(()=>{
+    el.textContent=COMPLIMENTS[idx];
+    el.style.transition='all .4s cubic-bezier(.34,1.56,.64,1)';
+    el.style.opacity='1';el.style.transform='scale(1)';
+  },200);
+  addXP(2,'Spread positivity!');
+}
+
+// ─── FUN FACTS ────────────────────────────
+const FACTS=[
+  {icon:'🦷',cat:'Human Body',text:"You produce about 25,000 quarts of saliva in your lifetime — enough to fill 2 swimming pools! 🏊"},
+  {icon:'🐘',cat:'Animals',text:"Elephants are the only animals that can't jump! They also mourn their dead and feel deep emotions. 😢"},
+  {icon:'🌊',cat:'Earth',text:"The ocean makes up about 70% of Earth's surface, yet we've only explored around 5% of it. 🗺️"},
+  {icon:'🚀',cat:'Space',text:"If you could fly to the Moon at airplane speed, it would take about 20 days. Mars? About 300 YEARS! ✈️"},
+  {icon:'🎵',cat:'Science',text:"Music has been scientifically shown to improve mood, memory, and even boost athletic performance! 🏅"},
+  {icon:'🐝',cat:'Animals',text:"Honeybees flap their wings about 200 times per second — that's what makes their buzz! 🎵"},
+  {icon:'🧬',cat:'Science',text:"Your DNA, if stretched out, would reach from the Sun to Pluto and back about 17 times! 🧪"},
+  {icon:'🌳',cat:'Nature',text:"Trees can communicate with each other through underground fungal networks, sending nutrients to sick trees! 🍄"},
+  {icon:'🔢',cat:'Math',text:"The number 0 was invented in India around 500 AD — before that, there was literally no zero! 🤯"},
+  {icon:'💤',cat:'Human Body',text:"Humans spend about 26 years of their life sleeping and 7 years trying to fall asleep! 😴"},
+  {icon:'🐙',cat:'Animals',text:"Octopuses have 3 hearts, blue blood, and can re-grow their arms if they lose one! 💙"},
+  {icon:'🌈',cat:'Physics',text:"A rainbow is actually a full circle! We only see half of it because the ground gets in the way. ⭕"},
+];
+function renderFacts(){
+  const g=document.getElementById('factsGrid');g.innerHTML='';
+  const shown=FACTS.slice(0,6);
+  shown.forEach((f,i)=>{
+    const d=document.createElement('div');
+    d.className='fact-card';
+    d.innerHTML=`<span class="fact-icon">${f.icon}</span><div class="fact-category">${f.cat}</div><div class="fact-text">${f.text}</div><div class="fact-number">${i+1}</div>`;
+    d.onclick=()=>{
+      factsRead++;
+      if(factsRead>=5) unlockSticker('fact_fan');
+      addXP(2,'Learned a fact!');
+      d.style.borderColor='rgba(78,205,196,.5)';
+    };
+    g.appendChild(d);
+  });
+}
+renderFacts();
+
+// ─── WOULD YOU RATHER ────────────────────
+const WYR=[
+  {t:'Would you rather...',a:'🦸 Have superspeed',b:'🦅 Have the ability to fly'},
+  {t:'Would you rather...',a:'🌍 Travel the world for free',b:'🍕 Eat free food anywhere forever'},
+  {t:'Would you rather...',a:'🧠 Be super smart',b:'💪 Be super strong'},
+  {t:'Would you rather...',a:'🎮 Only play video games for a year',b:'📚 Only read books for a year'},
+  {t:'Would you rather...',a:'🦁 Be able to talk to animals',b:'🔮 Be able to see the future'},
+  {t:'Would you rather...',a:'🌙 Live in outer space',b:'🌊 Live deep in the ocean'},
+  {t:'Would you rather...',a:'🎵 Live in a musical (always singing)',b:'🎬 Live in an action movie'},
+  {t:'Would you rather...',a:'⏪ Go back in time 100 years',b:'⏩ Jump forward 100 years'},
+  {t:'Would you rather...',a:'🐉 Have a pet dragon',b:'🤖 Have a robot best friend'},
+  {t:'Would you rather...',a:'☀️ It always be sunny',b:'❄️ It always be snowing'},
+];
+let wyrIdx=0, wyrVoted=false, wyrCounts={a:Math.floor(Math.random()*50+30),b:Math.floor(Math.random()*50+30)};
+function showWYR(){
+  const w=WYR[wyrIdx];
+  document.getElementById('wyrTitle').textContent=w.t;
+  document.getElementById('wyrA').textContent=w.a;
+  document.getElementById('wyrB').textContent=w.b;
+  document.getElementById('wyrA').className='wyr-btn a';
+  document.getElementById('wyrB').className='wyr-btn b';
+  document.getElementById('wyrVotes').textContent='';
+  wyrVoted=false;
+}
+function wyrVote(side){
+  if(wyrVoted) return;
+  wyrVoted=true;
+  wyrCounts[side]++;
+  const total=wyrCounts.a+wyrCounts.b;
+  const pA=Math.round(wyrCounts.a/total*100),pB=100-pA;
+  document.getElementById('wyrA').classList.add(side==='a'?'voted-a':'');
+  document.getElementById('wyrB').classList.add(side==='b'?'voted-b':'');
+  document.getElementById('wyrVotes').textContent=`${pA}% chose A · ${pB}% chose B`;
+  addXP(3,'Voted on Would You Rather!');
+}
+function nextWYR(){wyrIdx=(wyrIdx+1)%WYR.length;wyrCounts={a:Math.floor(Math.random()*50+30),b:Math.floor(Math.random()*50+30)};showWYR();}
+showWYR();
+
+// ─── EMOJI QUIZ ───────────────────────────
+const EQ=[
+  {emojis:'🦁👑',ans:'The Lion King',opts:['Moana','The Lion King','Frozen','Aladdin']},
+  {emojis:'🕷️👨',ans:'Spider-Man',opts:['Batman','Spider-Man','Iron Man','Thor']},
+  {emojis:'❄️👸',ans:'Frozen',opts:['Tangled','Brave','Frozen','Cinderella']},
+  {emojis:'🐟🔵',ans:'Finding Nemo',opts:['Finding Nemo','Shark Tale','Free Willy','Jaws']},
+  {emojis:'🤖🚗',ans:'Transformers',opts:['Cars','Transformers','WALL·E','Robots']},
+  {emojis:'⚡🧙‍♂️🏫',ans:'Harry Potter',opts:['Percy Jackson','Harry Potter','The Hobbit','Narnia']},
+  {emojis:'🍕🐢👊',ans:'TMNT',opts:['TMNT','Godzilla','Rango','Kung Fu Panda']},
+  {emojis:'🌊🏄🦈',ans:'Lilo & Stitch',opts:['Surf\'s Up','Lilo & Stitch','Moana','Big Hero 6']},
+  {emojis:'🚀👨‍🚀🎢',ans:'Toy Story',opts:['Toy Story','Robots','The Incredibles','UP']},
+  {emojis:'🐻🍯🌲',ans:'Winnie the Pooh',opts:['Bambi','Winnie the Pooh','Paddington','Brother Bear']},
+];
+let eqIdx=0, eqScore=0;
+function showEQ(){
+  const q=EQ[eqIdx];
+  document.getElementById('eqDisplay').textContent=q.emojis;
+  const opts=document.getElementById('eqOpts');opts.innerHTML='';
+  [...q.opts].sort(()=>Math.random()-.5).forEach(o=>{
+    const b=document.createElement('button');
+    b.className='eq-btn';b.textContent=o;
+    b.onclick=()=>answerEQ(o,q.ans,b);
+    opts.appendChild(b);
+  });
+}
+function answerEQ(ans,correct,btn){
+  document.querySelectorAll('.eq-btn').forEach(b=>b.onclick=null);
+  if(ans===correct){
+    btn.classList.add('correct');eqScore++;
+    document.getElementById('eqScore').textContent=eqScore;
+    addXP(8,'Emoji quiz correct!');
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.eq-btn').forEach(b=>{if(b.textContent===correct)b.classList.add('correct');});
+  }
+  setTimeout(nextEQ,1000);
+}
+function nextEQ(){eqIdx=(eqIdx+1)%EQ.length;showEQ();}
+showEQ();
+
+// ─── PERSONALITY QUIZ ────────────────────
+const PQ=[
+  {q:'Your friend needs help. What do you do?',opts:[
+    {t:'Rush over immediately! 🏃',p:'hero'},
+    {t:'Think of the best plan first 🧠',p:'mind'},
+    {t:'Make them laugh to cheer up 😂',p:'spark'},
+    {t:'Listen and give a hug 🤗',p:'heart'},
+  ]},
+  {q:'Pick your dream weekend!',opts:[
+    {t:'Rock climbing & outdoor adventure 🧗',p:'hero'},
+    {t:'Building something amazing 🔧',p:'mind'},
+    {t:'Art, music, or making videos 🎨',p:'spark'},
+    {t:'Volunteering & helping others 🤝',p:'heart'},
+  ]},
+  {q:'What superpower would you choose?',opts:[
+    {t:'Super strength & speed 💪',p:'hero'},
+    {t:'Mind reading & genius IQ 🔮',p:'mind'},
+    {t:'Shapeshifting & creativity 🎭',p:'spark'},
+    {t:'Healing others & empathy 💚',p:'heart'},
+  ]},
+];
+const PQ_RESULTS={
+  hero:{emoji:'🦸',title:'The Brave Hero',desc:'You\'re bold, fearless, and always the first to help! People look up to you naturally. You\'re destined to lead!'},
+  mind:{emoji:'🧠',title:'The Mastermind',desc:'Your brain is your superpower! You think before you act, solve problems others can\'t, and are endlessly curious.'},
+  spark:{emoji:'⚡',title:'The Creative Spark',desc:'You light up every room! Artistic, funny, and full of ideas — you bring color and joy wherever you go.'},
+  heart:{emoji:'💚',title:'The Kind Heart',desc:'Your empathy and warmth make you irreplaceable. You make everyone feel safe and loved. The world needs more of you!'},
+};
+let pqStep=0, pqAnswers=[];
+function renderPQ(){
+  const el=document.getElementById('pqContent');
+  if(pqStep>=PQ.length){
+    // Calculate result
+    const counts={};pqAnswers.forEach(a=>counts[a]=(counts[a]||0)+1);
+    const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0];
+    const r=PQ_RESULTS[top];
+    el.innerHTML=`<div class="pq-result show"><span class="pq-result-emoji">${r.emoji}</span><div class="pq-result-title">${r.title}</div><div class="pq-result-desc">${r.desc}</div><br><button class="btn btn-primary" onclick="pqStep=0;pqAnswers=[];renderPQ()">🔄 Try Again</button></div>`;
+    addXP(15,'Completed personality quiz!');
+    return;
+  }
+  const q=PQ[pqStep];
+  el.innerHTML=`
+    <div style="font-size:11px;color:var(--text-dim);font-weight:900;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Question ${pqStep+1} of ${PQ.length}</div>
+    <div class="pq-question">${q.q}</div>
+    <div class="pq-opts">${q.opts.map(o=>`<div class="pq-opt" onclick="pqAnswer('${o.p}')">${o.t}</div>`).join('')}</div>
+  `;
+}
+function pqAnswer(p){pqAnswers.push(p);pqStep++;renderPQ();}
+renderPQ();
+
+// ─── COUNTDOWN ───────────────────────────
+let targetDate=new Date(new Date().getFullYear(),5,1);
+function updateCountdown(){
+  const now=new Date(), diff=targetDate-now;
+  if(diff<0){document.getElementById('countdown').innerHTML='<div class="cd-unit"><div class="cd-num">🎉</div><div class="cd-label">It\'s here!</div></div>';return;}
+  const days=Math.floor(diff/86400000);
+  const hrs=Math.floor((diff%86400000)/3600000);
+  const mins=Math.floor((diff%3600000)/60000);
+  const secs=Math.floor((diff%60000)/1000);
+  document.getElementById('countdown').innerHTML=
+    ['days','hrs','mins','secs'].map((l,i)=>`<div class="cd-unit"><div class="cd-num">${[days,hrs,mins,secs][i]}</div><div class="cd-label">${l}</div></div>`).join('');
+}
+function setCountdown(){
+  const d=prompt('Enter your target date (YYYY-MM-DD):');
+  if(d){const p=new Date(d);if(!isNaN(p)){targetDate=p;}}
+}
+updateCountdown();
+setInterval(updateCountdown,1000);
+
+// ─── THIS OR THAT ────────────────────────
+const TOT=[
+  {emoji:'🍕',fact:'Americans eat approximately 3 billion pizzas every year.',badge:'Food 🍕'},
+  {emoji:'🎮',fact:'The first video game ever made was called "Tennis for Two" in 1958.',badge:'Gaming 🕹️'},
+  {emoji:'🐋',fact:'Blue whales are so big, their hearts are the size of a small car.',badge:'Animals 🌊'},
+  {emoji:'⚡',fact:'Lightning strikes Earth about 100 times every second.',badge:'Nature ⚡'},
+  {emoji:'🧠',fact:'Your brain generates about 70,000 thoughts every single day.',badge:'Science 🔬'},
+  {emoji:'🌍',fact:'If all the ants on Earth were weighed, they\'d weigh more than all the humans.',badge:'Wild 🤯'},
+  {emoji:'🎵',fact:'The "Happy Birthday" song was one of the most recognized songs in history.',badge:'Music 🎶'},
+  {emoji:'🌙',fact:'On the Moon, you would weigh only 1/6 of what you weigh on Earth.',badge:'Space 🚀'},
+];
+document.getElementById('totList').innerHTML=TOT.map(t=>`
+  <div class="tot-item">
+    <span class="tot-emoji">${t.emoji}</span>
+    <span class="tot-fact">${t.fact}</span>
+    <span class="tot-badge">${t.badge}</span>
+  </div>
+`).join('');
+</script>
+</body>
+</html>

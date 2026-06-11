@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MyWorld — Games</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Online game cards */
+.game-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:18px;text-decoration:none;color:var(--text);display:flex;flex-direction:column;gap:7px;transition:var(--ease);position:relative;overflow:hidden;}
+.game-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--gc,#a855f7);opacity:.7;border-radius:0 0 16px 16px;}
+.game-card:hover{transform:translateY(-5px);box-shadow:0 14px 44px rgba(0,0,0,.4);border-color:rgba(255,255,255,.22);}
+.gc-icon{font-size:32px;}
+.gc-name{font-family:'Fredoka One',cursive;font-size:16px;}
+.gc-desc{font-size:11px;color:var(--text-dim);font-weight:700;line-height:1.5;flex:1;}
+.gc-tag{display:inline-block;padding:3px 9px;border-radius:99px;font-size:9px;font-weight:900;background:rgba(255,255,255,.07);margin-top:4px;}
+.gc-play{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:900;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);text-decoration:none;color:var(--text);transition:var(--ease);margin-top:4px;}
+.gc-play:hover{background:rgba(255,255,255,.2);}
+
+/* Mini-game panel */
+.mini-panel{background:var(--card-bg);border:1px solid var(--card-border);border-radius:18px;overflow:hidden;margin-bottom:28px;}
+.mini-tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--card-border);}
+.mini-tab{flex:1;min-width:80px;padding:11px 6px;text-align:center;font-weight:900;font-size:12px;cursor:pointer;color:var(--text-dim);border:none;background:none;transition:var(--ease);}
+.mini-tab.active{color:var(--teal);border-bottom:3px solid var(--teal);}
+.mini-tab:hover{color:var(--text);background:rgba(255,255,255,.04);}
+.mini-body{padding:20px;display:none;}
+.mini-body.active{display:block;}
+
+/* -- Tic Tac Toe -- */
+.ttt-board{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:220px;margin:14px auto;}
+.ttt-cell{height:66px;border-radius:11px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.11);font-family:'Fredoka One',cursive;font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--ease);}
+.ttt-cell:hover{background:rgba(255,255,255,.13);}
+.ttt-cell.x{color:var(--red);}
+.ttt-cell.o{color:var(--teal);}
+.ttt-status{text-align:center;font-weight:900;font-size:14px;margin-bottom:10px;min-height:20px;}
+
+/* -- RPS -- */
+.rps-choices{display:flex;gap:12px;justify-content:center;margin:14px 0;}
+.rps-btn{width:74px;height:74px;border-radius:14px;font-size:32px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.11);cursor:pointer;transition:var(--ease);display:flex;align-items:center;justify-content:center;}
+.rps-btn:hover{transform:scale(1.09);background:rgba(255,255,255,.15);}
+.rps-result{text-align:center;font-family:'Fredoka One',cursive;font-size:20px;min-height:28px;margin:8px 0;}
+.rps-score{display:flex;gap:18px;justify-content:center;font-weight:900;font-size:13px;color:var(--text-dim);}
+
+/* -- Math Quiz -- */
+.math-q{font-family:'Fredoka One',cursive;font-size:34px;text-align:center;margin:10px 0;}
+.math-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;max-width:280px;margin:0 auto;}
+.math-btn{padding:13px;border-radius:11px;font-family:'Fredoka One',cursive;font-size:18px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.11);cursor:pointer;color:var(--text);transition:var(--ease);}
+.math-btn:hover{background:rgba(255,255,255,.15);}
+.math-btn.correct{background:rgba(34,197,94,.28);border-color:var(--green);}
+.math-btn.wrong{background:rgba(255,107,107,.28);border-color:var(--red);}
+.math-info{text-align:center;font-size:12px;font-weight:800;color:var(--text-dim);margin-bottom:6px;}
+
+/* -- Memory Match -- */
+.mem-board{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;max-width:300px;margin:0 auto;}
+.mem-card{height:64px;border-radius:11px;cursor:pointer;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.11);display:flex;align-items:center;justify-content:center;font-size:26px;transition:var(--ease);user-select:none;}
+.mem-card:hover{background:rgba(255,255,255,.13);}
+.mem-card.flipped,.mem-card.matched{background:rgba(168,85,247,.18);border-color:var(--purple);}
+.mem-card.hidden{font-size:0;}
+.mem-card.matched{background:rgba(34,197,94,.18);border-color:var(--green);}
+.mem-info{text-align:center;font-weight:900;font-size:13px;color:var(--text-dim);margin-bottom:10px;}
+
+/* -- Reaction Test -- */
+.react-box{border-radius:14px;padding:28px;text-align:center;cursor:pointer;font-family:'Fredoka One',cursive;font-size:22px;transition:background .08s;margin:8px 0;min-height:110px;display:flex;align-items:center;justify-content:center;}
+.react-stats{display:flex;gap:18px;justify-content:center;font-weight:800;font-size:12px;color:var(--text-dim);}
+
+/* -- Snake -- */
+#snakeCanvas{background:#0a0a1a;border-radius:12px;border:2px solid rgba(255,255,255,.1);}
+.snake-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.snake-score{font-family:'Fredoka One',cursive;font-size:24px;color:var(--green);}
+.snake-hi{font-size:12px;font-weight:900;color:var(--text-dim);}
+.dpad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:3px;margin:10px auto 0;width:fit-content;}
+.dpad-btn{border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--ease);}
+.dpad-btn:active{background:rgba(255,255,255,.2);}
+
+/* -- Simon Says -- */
+.simon-status{text-align:center;font-family:'Fredoka One',cursive;font-size:20px;margin-bottom:12px;min-height:28px;}
+.simon-round{text-align:center;font-size:12px;font-weight:900;color:var(--text-dim);margin-bottom:10px;}
+
+/* -- Hangman -- */
+#hangCanvas{background:rgba(255,255,255,.03);border-radius:12px;border:1px solid rgba(255,255,255,.08);}
+.hang-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.hang-lives{font-family:'Fredoka One',cursive;font-size:22px;color:var(--red);}
+.hang-wins-lbl{font-size:12px;font-weight:900;color:var(--text-dim);}
+
+/* -- Clicker -- */
+.clicker-layout{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;}
+.clicker-left{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.clicker-total{font-family:'Fredoka One',cursive;font-size:38px;color:var(--yellow);text-align:center;line-height:1;}
+.clicker-cps{font-size:12px;font-weight:900;color:var(--text-dim);text-align:center;}
+.clicker-right{flex:1;min-width:180px;}
+.upgrade-section{font-family:'Fredoka One',cursive;font-size:15px;margin-bottom:10px;color:var(--teal);}
+
+/* -- Typing Race -- */
+.type-layout{max-width:480px;margin:0 auto;}
+.type-info{display:flex;justify-content:space-between;margin-bottom:10px;font-weight:900;font-size:12px;color:var(--text-dim);}
+.type-result{text-align:center;padding:16px;background:rgba(78,205,196,.1);border:1px solid rgba(78,205,196,.3);border-radius:12px;display:none;}
+.type-result.show{display:block;animation:pop .4s cubic-bezier(.34,1.56,.64,1);}
+
+/* -- Pokémon Battle -- */
+.pk-nav{display:flex;border-bottom:1px solid var(--card-border);margin-bottom:12px;}
+.pk-nav-btn{flex:1;padding:9px 4px;font-weight:900;font-size:11px;cursor:pointer;color:var(--text-dim);border:none;background:none;transition:var(--ease);}
+.pk-nav-btn.active{color:var(--yellow);border-bottom:3px solid var(--yellow);}
+.pk-nav-btn:hover:not(.active){color:var(--text);background:rgba(255,255,255,.04);}
+.pk-view-title{font-family:'Fredoka One',cursive;font-size:16px;margin-bottom:10px;color:var(--teal);}
+.poke-starters{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:360px;margin:0 auto 14px;}
+.poke-starter-card{background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;transition:var(--ease);}
+.poke-starter-card:hover{transform:scale(1.07);border-color:var(--yellow);background:rgba(255,220,0,.1);}
+.ps-sprite{font-size:40px;margin-bottom:4px;}
+.ps-name{font-family:'Fredoka One',cursive;font-size:13px;}
+.ps-type{font-size:10px;font-weight:900;padding:2px 8px;border-radius:99px;margin-top:5px;display:inline-block;}
+.pk-field{border-radius:14px;overflow:hidden;position:relative;background:linear-gradient(180deg,#0d1b3e 0%,#1e3f7a 48%,#4a8c4e 52%,#2d5a1e 100%);min-height:190px;margin-bottom:10px;padding:12px;display:flex;flex-direction:column;justify-content:space-between;}
+.pk-enemy-panel{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.pk-player-panel{display:flex;justify-content:space-between;align-items:flex-end;flex-direction:row-reverse;gap:8px;}
+.pk-info-box{background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:7px 10px;min-width:140px;backdrop-filter:blur(4px);}
+.pk-name-row{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:12px;margin-bottom:4px;}
+.pk-lvl{font-size:11px;color:var(--text-dim);font-weight:800;}
+.pk-hp-row{display:flex;align-items:center;gap:5px;}
+.pk-hp-label{font-size:9px;font-weight:900;color:var(--text-dim);width:14px;}
+.pk-hp-wrap{flex:1;height:6px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;}
+.pk-hp-fill{height:100%;border-radius:99px;transition:width .5s ease;background:linear-gradient(90deg,#22c55e,#4ade80);}
+.pk-hp-fill.low{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.pk-hp-fill.crit{background:linear-gradient(90deg,#ef4444,#f87171);}
+.pk-hp-fill.blue{background:linear-gradient(90deg,#60a5fa,#818cf8);}
+.pk-hp-fill.blue.low{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.pk-hp-fill.blue.crit{background:linear-gradient(90deg,#ef4444,#f87171);}
+.pk-hp-num{font-size:9px;font-weight:900;color:var(--text-dim);white-space:nowrap;}
+.pk-xp-wrap{height:3px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;margin-top:4px;}
+.pk-xp-fill{height:100%;background:linear-gradient(90deg,var(--yellow),#fb923c);border-radius:99px;transition:width .4s ease;}
+.pk-sprite-enemy{font-size:56px;line-height:1;display:block;text-align:right;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));transition:transform .2s,opacity .3s;}
+.pk-sprite-player{font-size:56px;line-height:1;display:block;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));transition:transform .2s,opacity .3s;}
+.pk-sprite-enemy.shake,.pk-sprite-player.shake{animation:pkShake .3s;}
+.pk-sprite-enemy.faint,.pk-sprite-player.faint{opacity:.2;transform:scale(.6) translateY(20px);}
+@keyframes pkShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);};}
+@keyframes evoFlash{0%,100%{filter:drop-shadow(0 0 0 transparent);}50%{filter:drop-shadow(0 0 24px #ffe66d) brightness(1.8);};}
+.pk-log{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:9px 12px;font-size:12px;font-weight:700;min-height:32px;margin-bottom:8px;color:var(--text-dim);}
+.pk-menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.pk-menu-btn{padding:11px 8px;border-radius:11px;font-size:12px;font-weight:900;border:2px solid rgba(255,255,255,.12);cursor:pointer;color:var(--text);background:rgba(255,255,255,.07);transition:var(--ease);}
+.pk-menu-btn:hover{background:rgba(255,255,255,.17);transform:scale(1.03);}
+.pk-back-btn{font-size:11px;font-weight:900;color:var(--text-dim);background:none;border:none;cursor:pointer;margin-top:5px;padding:3px 8px;}
+.pk-back-btn:hover{color:var(--text);}
+.poke-moves{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.poke-move-btn{padding:9px 6px;border-radius:10px;font-size:11px;font-weight:900;border:2px solid rgba(255,255,255,.12);cursor:pointer;color:var(--text);background:rgba(255,255,255,.06);transition:var(--ease);text-align:left;}
+.poke-move-btn:hover{background:rgba(255,255,255,.17);transform:scale(1.03);}
+.poke-move-btn.t-fire{border-color:#ff6b6b;background:rgba(255,107,107,.14);}
+.poke-move-btn.t-water{border-color:#60a5fa;background:rgba(96,165,250,.14);}
+.poke-move-btn.t-grass{border-color:#22c55e;background:rgba(34,197,94,.14);}
+.poke-move-btn.t-electric{border-color:#ffe66d;background:rgba(255,230,109,.14);}
+.poke-move-btn.t-psychic{border-color:#e879f9;background:rgba(232,121,249,.14);}
+.poke-move-btn.t-ghost{border-color:#a855f7;background:rgba(168,85,247,.14);}
+.poke-move-btn.t-ice{border-color:#7dd3fc;background:rgba(125,211,252,.14);}
+.poke-move-btn.t-rock{border-color:#a8a29e;background:rgba(168,162,158,.14);}
+.poke-move-btn.t-dark{border-color:#78716c;background:rgba(120,113,108,.14);}
+.poke-move-btn.t-dragon{border-color:#818cf8;background:rgba(129,140,248,.14);}
+.pk-items-grid,.pk-switch-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:5px;}
+.pk-item-btn{padding:8px;border-radius:10px;font-size:11px;font-weight:900;border:2px solid rgba(78,205,196,.3);background:rgba(78,205,196,.08);cursor:pointer;color:var(--text);transition:var(--ease);text-align:left;}
+.pk-item-btn:hover{background:rgba(78,205,196,.2);}
+.pk-item-btn:disabled{opacity:.35;cursor:not-allowed;}
+.pk-switch-btn{padding:8px;border-radius:10px;font-size:11px;font-weight:900;border:2px solid rgba(168,85,247,.3);background:rgba(168,85,247,.08);cursor:pointer;color:var(--text);transition:var(--ease);text-align:left;}
+.pk-switch-btn:hover{background:rgba(168,85,247,.2);}
+.pk-switch-btn:disabled{opacity:.35;cursor:not-allowed;}
+.pk-switch-btn.active-sw{border-color:var(--yellow);}
+.pk-stats-row{display:flex;gap:12px;justify-content:center;font-size:11px;font-weight:900;color:var(--text-dim);margin-top:8px;}
+.pk-party-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pk-party-card{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:12px;cursor:pointer;transition:var(--ease);position:relative;}
+.pk-party-card.active-poke{border-color:var(--yellow);background:rgba(255,220,0,.07);}
+.pk-party-card:hover:not(.pk-empty){transform:translateY(-2px);background:rgba(255,255,255,.1);}
+.pk-empty{opacity:.4;cursor:default;border-style:dashed;}
+.pk-party-sprite{font-size:30px;margin-bottom:4px;}
+.pk-party-name{font-family:'Fredoka One',cursive;font-size:13px;}
+.pk-active-badge{position:absolute;top:8px;right:8px;font-size:9px;font-weight:900;background:var(--yellow);color:#000;padding:2px 6px;border-radius:99px;}
+.pk-phbar{height:5px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;margin-top:5px;}
+.pk-phfill{height:100%;border-radius:99px;background:linear-gradient(90deg,#22c55e,#4ade80);}
+.pk-phfill.low{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.pk-phfill.crit{background:linear-gradient(90deg,#ef4444,#f87171);}
+.pk-evo-bar{height:3px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-top:3px;}
+.pk-evo-fill{height:100%;background:linear-gradient(90deg,#a855f7,#e879f9);border-radius:99px;}
+.pk-gym-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+.pk-gym-card{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:12px;transition:var(--ease);}
+.pk-gym-card.beaten{border-color:var(--green);background:rgba(34,197,94,.07);}
+.pk-gym-card.locked{opacity:.5;}
+.pk-gym-icon{font-size:28px;margin-bottom:4px;}
+.pk-gym-name{font-family:'Fredoka One',cursive;font-size:13px;}
+.pk-gym-leader{font-size:10px;font-weight:800;margin-top:2px;}
+.pk-gym-btn{margin-top:8px;width:100%;padding:7px;border-radius:8px;font-size:11px;font-weight:900;border:1px solid;cursor:pointer;transition:var(--ease);background:none;}
+.pk-gym-btn.challenge{border-color:#ff6b6b;color:#ff6b6b;}
+.pk-gym-btn.challenge:hover{background:rgba(255,107,107,.2);}
+.pk-gym-btn.done{border-color:var(--green);color:var(--green);cursor:default;}
+.pk-train-info{font-size:11px;font-weight:800;color:var(--teal);margin:10px 0 8px;text-align:center;}
+.pk-train-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.pk-train-btns .btn{font-size:11px;padding:9px 12px;line-height:1.5;flex:1;}
+.pk-bag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+.pk-bag-item{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 6px;text-align:center;}
+.pk-bag-icon{font-size:26px;margin-bottom:3px;}
+.pk-bag-name{font-family:'Fredoka One',cursive;font-size:11px;}
+.pk-bag-count{font-size:20px;font-weight:900;color:var(--yellow);}
+.pk-bag-desc{font-size:9px;font-weight:700;color:var(--text-dim);}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">?? MyWorld</div>
+  <div class="sidebar-tagline">Your Personal Space</div>
+  <div class="sidebar-level">
+    <span class="level-badge">? Level 1</span>
+    <div class="xp-bar-wrap"><div class="xp-bar" style="width:0%"></div></div>
+    <div class="xp-text">0 / 80 XP</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html"       class="nav-link"        data-page="home">   <span class="nav-icon">??</span><span>Home</span></a></li>
+    <li><a href="games.html"       class="nav-link active" data-page="games">  <span class="nav-icon">??</span><span>Games</span></a></li>
+    <li><a href="chess.html"       class="nav-link"        data-page="chess">  <span class="nav-icon">??</span><span>Chess</span></a></li>
+    <li><a href="school-life.html" class="nav-link"        data-page="school"> <span class="nav-icon">??</span><span>School Life</span></a></li>
+    <li><a href="fun-zone.html"    class="nav-link"        data-page="funzone"><span class="nav-icon">??</span><span>Fun Zone</span></a></li>
+    <li><a href="about.html"       class="nav-link"        data-page="about">  <span class="nav-icon">??</span><span>About Me</span></a></li>\n    <li><a href="wave-creator.html" class="nav-link"        data-page="wave">   <span class="nav-icon">??</span><span>Wave Creator</span></a></li>
+  </ul>
+  <div class="sidebar-footer">Made with ?? just for you!</div>
+</nav>
+
+<main class="main">
+  <div class="page-header">
+    <h1 class="page-title" style="background:linear-gradient(135deg,#4ecdc4,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">?? Games</h1>
+    <p class="page-subtitle">11 built-in mini-games + 15 top online games for ages 10–15!</p>
+  </div>
+
+  <!-- -- MINI-GAMES -- -->
+  <div class="section-title">??? Play Right Here</div>
+  <div class="mini-panel">
+    <div class="mini-tabs">
+      <button class="mini-tab active" onclick="switchTab('ttt',this)">? Tic Tac Toe</button>
+      <button class="mini-tab"        onclick="switchTab('rps',this)">?? RPS</button>
+      <button class="mini-tab"        onclick="switchTab('math',this)">?? Math Quiz</button>
+      <button class="mini-tab"        onclick="switchTab('mem',this)">?? Memory</button>
+      <button class="mini-tab"        onclick="switchTab('react',this)">? Reaction</button>
+      <button class="mini-tab"        onclick="switchTab('snake',this)">?? Snake</button>
+      <button class="mini-tab"        onclick="switchTab('simon',this)">?? Simon</button>
+      <button class="mini-tab"        onclick="switchTab('hang',this)">?? Hangman</button>
+      <button class="mini-tab"        onclick="switchTab('clicker',this)">?? Clicker</button>
+      <button class="mini-tab"        onclick="switchTab('type',this)">?? Typing</button>
+      <button class="mini-tab"        onclick="switchTab('poke',this)">?? Pokémon</button>
+    </div>
+
+    <!-- TIC TAC TOE -->
+    <div id="tab-ttt" class="mini-body active">
+      <div class="ttt-status" id="tttStatus">Player X's turn!</div>
+      <div class="ttt-board" id="tttBoard"></div>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn btn-primary" onclick="tttReset()">?? New Game</button>
+        <span style="margin-left:12px;font-size:12px;color:var(--text-dim);font-weight:800">X=<span id="tttX">0</span> O=<span id="tttO">0</span></span>
+      </div>
+    </div>
+
+    <!-- ROCK PAPER SCISSORS -->
+    <div id="tab-rps" class="mini-body">
+      <div style="text-align:center;font-weight:800;color:var(--text-dim);margin-bottom:6px">Choose your move!</div>
+      <div class="rps-choices">
+        <button class="rps-btn" onclick="rpsPlay('rock')"     title="Rock">??</button>
+        <button class="rps-btn" onclick="rpsPlay('paper')"    title="Paper">??</button>
+        <button class="rps-btn" onclick="rpsPlay('scissors')" title="Scissors">??</button>
+      </div>
+      <div class="rps-result" id="rpsResult">–</div>
+      <div class="rps-score">
+        <span>You: <strong id="rpsY">0</strong></span>
+        <span>Tie: <strong id="rpsT">0</strong></span>
+        <span>CPU: <strong id="rpsC">0</strong></span>
+      </div>
+    </div>
+
+    <!-- MATH QUIZ -->
+    <div id="tab-math" class="mini-body">
+      <div class="math-info">Score: <strong id="mathScore">0</strong> · Level: <strong id="mathLevel">Easy</strong></div>
+      <div class="math-q" id="mathQ">?</div>
+      <div class="math-opts" id="mathOpts"></div>
+      <div style="text-align:center;margin-top:12px"><button class="btn btn-secondary" onclick="mathNext()">? Skip</button></div>
+    </div>
+
+    <!-- MEMORY MATCH -->
+    <div id="tab-mem" class="mini-body">
+      <div class="mem-info">Pairs: <span id="memPairs">0</span>/8 · Moves: <span id="memMoves">0</span></div>
+      <div class="mem-board" id="memBoard"></div>
+      <div style="text-align:center;margin-top:12px"><button class="btn btn-primary" onclick="memInit()">?? Shuffle</button></div>
+    </div>
+
+    <!-- REACTION TEST -->
+    <div id="tab-react" class="mini-body">
+      <div style="text-align:center;font-weight:800;color:var(--text-dim);margin-bottom:6px">Click the box when it turns GREEN!</div>
+      <div class="react-box" id="reactBox" onclick="reactClick()" style="background:rgba(255,255,255,.05)">Click to Start ??</div>
+      <div class="react-stats">
+        <span>Best: <strong id="reactBest">–</strong> ms</span>
+        <span>Last: <strong id="reactLast">–</strong> ms</span>
+        <span>Tries: <strong id="reactTries">0</strong></span>
+      </div>
+    </div>
+
+    <!-- SNAKE -->
+    <div id="tab-snake" class="mini-body">
+      <div class="snake-info">
+        <div><div class="snake-score" id="snakeScore">0</div><div class="snake-hi">Best: <span id="snakeHi">0</span></div></div>
+        <button class="btn btn-primary" onclick="snakeStart()">? Start / Restart</button>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="snakeCanvas" width="360" height="360"></canvas>
+        <div style="font-size:11px;color:var(--text-dim);font-weight:800">Arrow keys or WASD to move</div>
+        <div class="dpad">
+          <div></div>
+          <button class="dpad-btn" onclick="snakeDir(0,-1)">?</button>
+          <div></div>
+          <button class="dpad-btn" onclick="snakeDir(-1,0)">?</button>
+          <div></div>
+          <button class="dpad-btn" onclick="snakeDir(1,0)">?</button>
+          <div></div>
+          <button class="dpad-btn" onclick="snakeDir(0,1)">?</button>
+          <div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIMON SAYS -->
+    <div id="tab-simon" class="mini-body">
+      <div class="simon-round">Round: <strong id="simonRound">0</strong> · Best: <strong id="simonBest">0</strong></div>
+      <div class="simon-status" id="simonStatus">Press Start to play!</div>
+      <div class="simon-grid">
+        <div class="simon-pad red"    id="simon-red"    onclick="simonClick('red')">??</div>
+        <div class="simon-pad blue"   id="simon-blue"   onclick="simonClick('blue')">??</div>
+        <div class="simon-pad green"  id="simon-green"  onclick="simonClick('green')">??</div>
+        <div class="simon-pad yellow" id="simon-yellow" onclick="simonClick('yellow')">??</div>
+      </div>
+      <div style="text-align:center;margin-top:12px"><button class="btn btn-primary" onclick="simonStart()">? Start</button></div>
+    </div>
+
+    <!-- HANGMAN -->
+    <div id="tab-hang" class="mini-body">
+      <div class="hang-info">
+        <div><div class="hang-lives" id="hangHearts">????????????</div><div class="hang-wins-lbl">Wins: <span id="hangWins">0</span> · Best streak: <span id="hangStreak">0</span></div></div>
+        <button class="btn btn-secondary" onclick="hangNew()">?? New Word</button>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;justify-content:center">
+        <div class="canvas-wrap"><canvas id="hangCanvas" width="180" height="190"></canvas></div>
+        <div style="flex:1;min-width:200px">
+          <div class="hang-word" id="hangWord"></div>
+          <div id="hangMsg" style="text-align:center;font-family:'Fredoka One',cursive;font-size:18px;min-height:26px;margin-bottom:10px"></div>
+          <div class="hang-letters" id="hangLetters"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLICKER -->
+    <div id="tab-clicker" class="mini-body">
+      <div class="clicker-layout">
+        <div class="clicker-left">
+          <div class="clicker-total" id="clickTotal">0</div>
+          <div style="font-size:11px;font-weight:900;color:var(--text-dim)">CLICKS</div>
+          <div class="clicker-cps" id="clickCPS">+0 / sec</div>
+          <button class="clicker-btn" onclick="doClick()">??</button>
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 14px;margin-top:4px" onclick="clickReset()">?? Reset</button>
+        </div>
+        <div class="clicker-right">
+          <div class="upgrade-section">?? Upgrades</div>
+          <div id="upgradeList"></div>
+          <div style="font-size:11px;color:var(--text-dim);font-weight:700;margin-top:10px">High Score: <strong id="clickHi">0</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TYPING RACE -->
+    <div id="tab-type" class="mini-body">
+      <div class="type-layout">
+        <div class="type-info">
+          <span>Difficulty: <strong id="typeDiff">Medium</strong></span>
+          <span>? <strong id="typeTimer">0.0s</strong></span>
+        </div>
+        <div class="type-sentence" id="typeSentence"></div>
+        <input id="type-input" type="text" placeholder="Start typing to begin..." autocomplete="off" oninput="typeInput()" onpaste="return false">
+        <div class="type-result" id="typeResult">
+          <div class="wpm-display" id="typeWPM">0</div>
+          <div style="font-family:'Fredoka One',cursive;font-size:16px;color:var(--text-dim)">WPM</div>
+          <div style="font-size:13px;font-weight:800;color:var(--text-dim);margin-top:6px" id="typeAcc"></div>
+          <button class="btn btn-primary" style="margin-top:10px" onclick="typeNext()">? Next Sentence</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- POKÉMON RPG -->
+    <div id="tab-poke" class="mini-body">
+      <!-- Sub-nav -->
+      <div class="pk-nav">
+        <button class="pk-nav-btn active" data-pk="battle" onclick="pkView('battle')">?? Battle</button>
+        <button class="pk-nav-btn" data-pk="party" onclick="pkView('party')">?? Party</button>
+        <button class="pk-nav-btn" data-pk="gym" onclick="pkView('gym')">??? Gym</button>
+        <button class="pk-nav-btn" data-pk="bag" onclick="pkView('bag')">?? Bag</button>
+      </div>
+      <!-- BATTLE VIEW -->
+      <div id="pkBattleView">
+        <div id="pkSelectScreen">
+          <div class="pk-view-title">? Choose Your Starter!</div>
+          <div class="poke-starters" id="pokeStarterGrid"></div>
+        </div>
+        <div id="pkBattleScreen" style="display:none">
+          <div class="pk-field">
+            <div class="pk-enemy-panel">
+              <div class="pk-info-box">
+                <div class="pk-name-row"><span id="pkEnemyName">Wild</span><span id="pkEnemyLvl" class="pk-lvl">Lv.5</span></div>
+                <div class="pk-hp-row">
+                  <span class="pk-hp-label">HP</span>
+                  <div class="pk-hp-wrap"><div class="pk-hp-fill" id="pkEnemyHPBar" style="width:100%"></div></div>
+                  <span id="pkEnemyHPNum" class="pk-hp-num"></span>
+                </div>
+              </div>
+              <span id="pkEnemySprite" class="pk-sprite-enemy">?</span>
+            </div>
+            <div class="pk-player-panel">
+              <span id="pkPlayerSprite" class="pk-sprite-player">?</span>
+              <div class="pk-info-box">
+                <div class="pk-name-row"><span id="pkPlayerName">You</span><span id="pkPlayerLvl" class="pk-lvl">Lv.5</span></div>
+                <div class="pk-hp-row">
+                  <span class="pk-hp-label">HP</span>
+                  <div class="pk-hp-wrap"><div class="pk-hp-fill blue" id="pkPlayerHPBar" style="width:100%"></div></div>
+                  <span id="pkPlayerHPNum" class="pk-hp-num"></span>
+                </div>
+                <div class="pk-xp-wrap"><div class="pk-xp-fill" id="pkPlayerXPBar" style="width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="pk-log" id="pkLog">...</div>
+          <div id="pkActionsPanel">
+            <div id="pkMenuBtns" class="pk-menu-grid">
+              <button class="pk-menu-btn" onclick="pkShowMoves()">?? Fight</button>
+              <button class="pk-menu-btn" onclick="pkShowItems(true)">?? Item</button>
+              <button class="pk-menu-btn" onclick="pkShowSwitch(true)">?? Switch</button>
+              <button class="pk-menu-btn" onclick="pkRunAway()">?? Run</button>
+            </div>
+            <div id="pkMovesPanel" style="display:none">
+              <div class="poke-moves" id="pkMovesGrid"></div>
+              <button class="pk-back-btn" onclick="pkShowMenu()">? Back</button>
+            </div>
+            <div id="pkItemsPanel" style="display:none">
+              <div class="pk-items-grid" id="pkItemsGrid"></div>
+              <button class="pk-back-btn" onclick="pkShowMenu()">? Back</button>
+            </div>
+            <div id="pkSwitchPanel" style="display:none">
+              <div class="pk-switch-grid" id="pkSwitchGrid"></div>
+              <button class="pk-back-btn" onclick="pkShowMenu()">? Back</button>
+            </div>
+          </div>
+          <div class="pk-stats-row">
+            <span>Caught: <b id="pkCaughtNum">0</b></span>
+            <span>Badges: <b id="pkBadgeNum">0</b> ??</span>
+            <span>Wins: <b id="pkWinsNum">0</b></span>
+          </div>
+        </div>
+      </div>
+      <!-- PARTY VIEW -->
+      <div id="pkPartyView" style="display:none">
+        <div class="pk-view-title">?? Your Party</div>
+        <div class="pk-party-grid" id="pkPartyGrid"></div>
+        <div style="text-align:center;font-size:10px;color:var(--text-dim);font-weight:800;margin-top:10px">Click a Pokémon to set as active battler · Up to 6 slots</div>
+      </div>
+      <!-- GYM VIEW -->
+      <div id="pkGymView" style="display:none">
+        <div class="pk-view-title">??? Gym Challenge</div>
+        <div class="pk-gym-grid" id="pkGymGrid"></div>
+        <div class="pk-view-title" style="font-size:14px;margin-top:14px;margin-bottom:4px">?? Training Grounds</div>
+        <div id="pkTrainInfo" class="pk-train-info"></div>
+        <div class="pk-train-btns">
+          <button class="btn btn-secondary" onclick="pkTrain('light')">?? Light<br><small style="opacity:.7">+25 XP · Safe</small></button>
+          <button class="btn btn-secondary" onclick="pkTrain('medium')">?? Hard<br><small style="opacity:.7">+60 XP · -15 HP</small></button>
+          <button class="btn btn-primary" onclick="pkTrain('intense')">?? Intense<br><small style="opacity:.7">+120 XP · -30 HP</small></button>
+        </div>
+      </div>
+      <!-- BAG VIEW -->
+      <div id="pkBagView" style="display:none">
+        <div class="pk-view-title">?? Your Bag</div>
+        <div class="pk-bag-grid" id="pkBagGrid"></div>
+        <div style="font-size:10px;color:var(--text-dim);font-weight:800;margin-top:10px;text-align:center">Healing items can also be used during battle via the Item button</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- -- ONLINE GAMES -- -->
+  <div class="section-title">?? Best Online Games (Ages 10–15)</div>
+  <div class="grid-4" id="onlineGrid"></div>
+</main>
+
+<script src="shared.js"></script>
+<script>
+recordVisit('games');
+
+// -- TAB SWITCHER ------------------------------------------------
+function switchTab(id, btn) {
+  document.querySelectorAll('.mini-body').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.mini-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  // Init games on first open
+  const init = {mem:memInit, math:mathNext, react:reactReset, snake:snakeDraw, simon:()=>{}, hang:hangNew, clicker:clickerRender, type:typeNext, poke:pokeInitStarters};
+  if (init[id]) init[id]();
+}
+
+// --------------------------------------------------------------
+//  GAME 1: TIC TAC TOE
+// --------------------------------------------------------------
+let tttBoard=Array(9).fill(''), tttTurn='X', tttSc={X:0,O:0};
+const tttWins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+function tttRender() {
+  const el=document.getElementById('tttBoard'); el.innerHTML='';
+  tttBoard.forEach((v,i)=>{
+    const c=document.createElement('button'); c.className='ttt-cell'+(v?' '+v.toLowerCase():'');
+    c.textContent=v; c.onclick=()=>tttClick(i); el.appendChild(c);
+  });
+}
+function tttClick(i) {
+  if(tttBoard[i]||tttCheckWin()) return;
+  tttBoard[i]=tttTurn;
+  if(tttCheckWin()){
+    tttSc[tttTurn]++; document.getElementById('ttt'+tttTurn).textContent=tttSc[tttTurn];
+    document.getElementById('tttStatus').textContent=`?? Player ${tttTurn} wins!`;
+    addXP(15,'Tic Tac Toe win');
+  } else if(!tttBoard.includes('')) {
+    document.getElementById('tttStatus').textContent="?? Draw!";
+  } else {
+    tttTurn=tttTurn==='X'?'O':'X';
+    document.getElementById('tttStatus').textContent=`Player ${tttTurn}'s turn!`;
+  }
+  tttRender();
+}
+function tttCheckWin(){ return tttWins.find(([a,b,c])=>tttBoard[a]&&tttBoard[a]===tttBoard[b]&&tttBoard[a]===tttBoard[c]); }
+function tttReset(){ tttBoard=Array(9).fill(''); tttTurn='X'; document.getElementById('tttStatus').textContent="Player X's turn!"; tttRender(); }
+tttReset();
+
+// --------------------------------------------------------------
+//  GAME 2: ROCK PAPER SCISSORS
+// --------------------------------------------------------------
+const rpsOpts=['rock','paper','scissors'], rpsEmoji={rock:'??',paper:'??',scissors:'??'};
+let rpsSc={y:0,c:0,t:0}, rpsWins=0;
+function rpsPlay(you) {
+  const cpu=rpsOpts[Math.floor(Math.random()*3)];
+  let res='';
+  if(you===cpu){res='?? Tie!';rpsSc.t++;}
+  else if((you==='rock'&&cpu==='scissors')||(you==='paper'&&cpu==='rock')||(you==='scissors'&&cpu==='paper')){
+    res='?? You Win!';rpsSc.y++;rpsWins++;addXP(8,'RPS win');
+    if(rpsWins>=3) unlockSticker('rps_champ');
+  } else {res='?? CPU Wins!';rpsSc.c++;}
+  document.getElementById('rpsResult').textContent=`${rpsEmoji[you]} vs ${rpsEmoji[cpu]} — ${res}`;
+  document.getElementById('rpsY').textContent=rpsSc.y;
+  document.getElementById('rpsT').textContent=rpsSc.t;
+  document.getElementById('rpsC').textContent=rpsSc.c;
+}
+
+// --------------------------------------------------------------
+//  GAME 3: MATH QUIZ
+// --------------------------------------------------------------
+let mathScore=0, mathCorrect=0, mathAns;
+const mathLevels=['Easy','Medium','Hard','Pro'];
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function mathQuestion(){
+  const lvl=Math.min(3,Math.floor(mathScore/5));
+  document.getElementById('mathLevel').textContent=mathLevels[lvl];
+  let a,b,op,ans;
+  if(lvl===0){a=rnd(1,10);b=rnd(1,10);op='+';ans=a+b;}
+  else if(lvl===1){a=rnd(5,20);b=rnd(5,20);op=['+','-'][rnd(0,1)];ans=op==='+'?a+b:a-b;}
+  else if(lvl===2){a=rnd(2,12);b=rnd(2,12);op='×';ans=a*b;}
+  else{a=rnd(10,50);b=rnd(2,9);op=['×','+','-'][rnd(0,2)];ans=op==='×'?a*b:op==='+'?a+b:a-b;}
+  mathAns=ans;
+  document.getElementById('mathQ').textContent=`${a} ${op} ${b} = ?`;
+  const wrongs=new Set(); while(wrongs.size<3){const w=ans+rnd(-10,10);if(w!==ans)wrongs.add(w);}
+  const opts=[ans,...wrongs].sort(()=>Math.random()-.5);
+  const c=document.getElementById('mathOpts'); c.innerHTML='';
+  opts.forEach(o=>{
+    const btn=document.createElement('button'); btn.className='math-btn'; btn.textContent=o;
+    btn.onclick=()=>{ document.querySelectorAll('.math-btn').forEach(b=>b.onclick=null);
+      if(o===mathAns){btn.classList.add('correct');mathScore++;mathCorrect++;addXP(5,'Correct!');if(mathCorrect>=5)unlockSticker('math_whiz');}
+      else btn.classList.add('wrong');
+      document.getElementById('mathScore').textContent=mathScore;
+      setTimeout(mathNext,900);
+    };
+    c.appendChild(btn);
+  });
+}
+function mathNext(){mathQuestion();}
+mathNext();
+
+// --------------------------------------------------------------
+//  GAME 4: MEMORY MATCH
+// --------------------------------------------------------------
+const memEmojis=['??','??','??','??','??','??','??','??'];
+let memCards=[], memFlipped=[], memMatched=0, memMoves=0, memLocked=false;
+function memInit(){
+  const arr=[...memEmojis,...memEmojis].sort(()=>Math.random()-.5);
+  memCards=arr.map((e,i)=>({emoji:e,id:i,face:false,matched:false}));
+  memFlipped=[];memMatched=0;memMoves=0;memLocked=false;
+  document.getElementById('memPairs').textContent=0;
+  document.getElementById('memMoves').textContent=0;
+  memRender();
+}
+function memRender(){
+  const b=document.getElementById('memBoard'); b.innerHTML='';
+  memCards.forEach((c,i)=>{
+    const div=document.createElement('div');
+    div.className='mem-card'+(c.face||c.matched?' flipped':'')+(c.matched?' matched':'')+((!c.face&&!c.matched)?' hidden':'');
+    div.textContent=c.face||c.matched?c.emoji:'';
+    div.onclick=()=>memFlip(i); b.appendChild(div);
+  });
+}
+function memFlip(i){
+  if(memLocked||memCards[i].face||memCards[i].matched) return;
+  memCards[i].face=true;memFlipped.push(i);memRender();
+  if(memFlipped.length===2){
+    memLocked=true;memMoves++;document.getElementById('memMoves').textContent=memMoves;
+    const[a,b]=memFlipped;
+    if(memCards[a].emoji===memCards[b].emoji){
+      memCards[a].matched=memCards[b].matched=true;memMatched++;memFlipped=[];memLocked=false;
+      document.getElementById('memPairs').textContent=memMatched;
+      memRender();
+      if(memMatched===8){addXP(20,'Memory Master!');unlockSticker('memory_master');showToast('?? Memory Master!','??');}
+    } else { setTimeout(()=>{memCards[a].face=memCards[b].face=false;memFlipped=[];memLocked=false;memRender();},900); }
+  }
+}
+memInit();
+
+// --------------------------------------------------------------
+//  GAME 5: REACTION TEST
+// --------------------------------------------------------------
+let reactState='idle', reactTimer, reactStart, reactBest=Infinity, reactTries=0;
+function reactClick(){
+  const box=document.getElementById('reactBox');
+  if(reactState==='idle'){
+    reactState='waiting';box.style.background='rgba(255,107,107,.2)';box.textContent='Wait for green... ??';
+    reactTimer=setTimeout(()=>{reactState='go';reactStart=Date.now();box.style.background='rgba(34,197,94,.4)';box.textContent='CLICK NOW! ??';},1000+Math.random()*3000);
+  } else if(reactState==='waiting'){
+    clearTimeout(reactTimer);reactState='idle';box.style.background='rgba(255,107,107,.2)';box.textContent='Too early! ?? Click to retry.';
+  } else if(reactState==='go'){
+    const ms=Date.now()-reactStart; reactTries++;
+    if(ms<reactBest) reactBest=ms;
+    reactState='idle';box.style.background='rgba(168,85,247,.2)';
+    box.textContent=`${ms}ms! ${ms<200?'INCREDIBLE! ??':ms<400?'Great! ??':'Keep practicing! ??'} Click to retry.`;
+    document.getElementById('reactBest').textContent=reactBest+'ms';
+    document.getElementById('reactLast').textContent=ms+'ms';
+    document.getElementById('reactTries').textContent=reactTries;
+    addXP(3,'Reaction test');
+  }
+}
+function reactReset(){clearTimeout(reactTimer);reactState='idle';const b=document.getElementById('reactBox');b.style.background='rgba(255,255,255,.05)';b.textContent='Click to Start ??';}
+
+// --------------------------------------------------------------
+//  GAME 6: SNAKE
+// --------------------------------------------------------------
+const SC=18, COLS=20, ROWS=20; // cell size 18px, 20x20 grid
+let snake, snakeD, snakeNextD, snakeFood, snakeAlive, snakeScoreVal, snakeLoop;
+
+function snakeStart(){
+  clearInterval(snakeLoop);
+  snake=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];
+  snakeD={x:1,y:0}; snakeNextD={x:1,y:0};
+  snakeAlive=true; snakeScoreVal=0;
+  snakeFood=snakeSpawnFood();
+  document.getElementById('snakeScore').textContent=0;
+  document.getElementById('snakeHi').textContent=getHighScore('snake');
+  snakeLoop=setInterval(snakeTick,160);
+}
+function snakeSpawnFood(){
+  let p; do{p={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)};}
+  while(snake.some(s=>s.x===p.x&&s.y===p.y)); return p;
+}
+function snakeDir(dx,dy){
+  if(dx!==0&&snakeD.x!==0) return;
+  if(dy!==0&&snakeD.y!==0) return;
+  snakeNextD={x:dx,y:dy};
+}
+function snakeTick(){
+  if(!snakeAlive) return;
+  snakeD=snakeNextD;
+  const head={x:snake[0].x+snakeD.x,y:snake[0].y+snakeD.y};
+  if(head.x<0||head.x>=COLS||head.y<0||head.y>=ROWS||snake.some(s=>s.x===head.x&&s.y===head.y)){
+    snakeAlive=false; clearInterval(snakeLoop);
+    submitGameScore('snake',snakeScoreVal,Math.floor(snakeScoreVal/2),s=>{if(s>=50)unlockSticker('snake_charmer');});
+    snakeDraw(); return;
+  }
+  snake.unshift(head);
+  if(head.x===snakeFood.x&&head.y===snakeFood.y){
+    snakeScoreVal+=10; document.getElementById('snakeScore').textContent=snakeScoreVal;
+    snakeFood=snakeSpawnFood();
+  } else { snake.pop(); }
+  snakeDraw();
+}
+function snakeDraw(){
+  const cv=document.getElementById('snakeCanvas'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#0a0a1a'; ctx.fillRect(0,0,cv.width,cv.height);
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,.03)';
+  for(let x=0;x<COLS;x++) for(let y=0;y<ROWS;y++) ctx.strokeRect(x*SC,y*SC,SC,SC);
+  // Food
+  ctx.fillStyle='#ff6b6b';
+  ctx.beginPath(); ctx.arc(snakeFood.x*SC+SC/2,snakeFood.y*SC+SC/2,SC/2-2,0,Math.PI*2); ctx.fill();
+  // Snake
+  snake.forEach((seg,i)=>{
+    const pct=1-i/snake.length;
+    ctx.fillStyle=`hsl(${150+pct*40},80%,${38+pct*18}%)`;
+    ctx.beginPath(); ctx.roundRect(seg.x*SC+1,seg.y*SC+1,SC-2,SC-2,4); ctx.fill();
+  });
+  if(!snakeAlive){
+    ctx.fillStyle='rgba(0,0,0,.75)'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#fff'; ctx.textAlign='center';
+    ctx.font='bold 22px Fredoka One,sans-serif'; ctx.fillText('Game Over! ??',cv.width/2,cv.height/2-16);
+    ctx.font='14px Nunito,sans-serif'; ctx.fillText(`Score: ${snakeScoreVal}`,cv.width/2,cv.height/2+12);
+    ctx.fillText('Click Start to play again',cv.width/2,cv.height/2+34);
+    document.getElementById('snakeHi').textContent=getHighScore('snake');
+  }
+}
+document.addEventListener('keydown',e=>{
+  const map={ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},
+             a:{x:-1,y:0},d:{x:1,y:0},w:{x:0,y:-1},s:{x:0,y:1}};
+  const d=map[e.key]; if(d&&snakeAlive){ e.preventDefault(); snakeDir(d.x,d.y); }
+});
+// Draw placeholder on load
+setTimeout(()=>{
+  const cv=document.getElementById('snakeCanvas'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#0a0a1a'; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='rgba(255,255,255,.3)'; ctx.textAlign='center';
+  ctx.font='bold 18px Fredoka One,sans-serif'; ctx.fillText('Press Start to play ??',cv.width/2,cv.height/2);
+},300);
+
+// --------------------------------------------------------------
+//  GAME 7: SIMON SAYS
+// --------------------------------------------------------------
+const simonColors=['red','blue','green','yellow'];
+let simonSeq=[], simonPIdx=0, simonAccepting=false, simonRound=0, simonBest=0;
+function simonStart(){
+  simonSeq=[];simonPIdx=0;simonAccepting=false;simonRound=0;
+  document.getElementById('simonStatus').textContent='Watch the pattern!';
+  document.getElementById('simonRound').textContent=0;
+  simonNextRound();
+}
+function simonNextRound(){
+  simonRound++;simonPIdx=0;simonAccepting=false;
+  simonSeq.push(simonColors[Math.floor(Math.random()*4)]);
+  document.getElementById('simonRound').textContent=simonRound;
+  document.getElementById('simonStatus').textContent='Watch carefully...';
+  setTimeout(simonPlaySeq,600);
+}
+function simonPlaySeq(){
+  let i=0;
+  const play=()=>{
+    if(i>=simonSeq.length){simonAccepting=true;document.getElementById('simonStatus').textContent='Your turn! Repeat the pattern.';return;}
+    simonFlash(simonSeq[i]);i++;setTimeout(play,800);
+  };
+  play();
+}
+function simonFlash(color){
+  const pad=document.getElementById('simon-'+color); if(!pad) return;
+  pad.classList.add('active'); setTimeout(()=>pad.classList.remove('active'),420);
+}
+function simonClick(color){
+  if(!simonAccepting) return;
+  simonFlash(color);
+  if(color!==simonSeq[simonPIdx]){
+    simonAccepting=false;
+    document.getElementById('simonStatus').textContent=`? Wrong! The answer was ${simonSeq[simonPIdx]}. You got ${simonRound-1} rounds!`;
+    if(simonRound-1>simonBest){ simonBest=simonRound-1; document.getElementById('simonBest').textContent=simonBest; }
+    submitGameScore('simon',simonRound-1,Math.floor((simonRound-1)*3),s=>{if(s>=8)unlockSticker('simon_master');});
+    return;
+  }
+  simonPIdx++;
+  if(simonPIdx>=simonSeq.length){
+    simonAccepting=false;
+    document.getElementById('simonStatus').textContent=`? Round ${simonRound} complete! Get ready...`;
+    setTimeout(simonNextRound,1200);
+  }
+}
+
+// --------------------------------------------------------------
+//  GAME 8: HANGMAN
+// --------------------------------------------------------------
+const WORDS=['RAINBOW','ADVENTURE','TREASURE','MYSTERY','FANTASTIC','CHAMPION','EXPLORER','DISCOVERY',
+ 'KNOWLEDGE','JOURNEY','LIGHTNING','UNIVERSE','DOLPHIN','VOLCANO','BUTTERFLY','CHOCOLATE','TORNADO',
+ 'MOUNTAIN','CRYSTAL','GALAXY','THUNDER','CASTLE','WIZARD','DRAGON','PYRAMID','COMPASS','LANTERN',
+ 'PHOENIX','ECLIPSE','AURORA','OCTOPUS','STARFISH','BLIZZARD','CINNAMON','ACADEMY'];
+let hangWord='', hangGuessed=new Set(), hangWrong=0, hangWins=0, hangStreak=0, hangBestStreak=0;
+function hangNew(){
+  hangWord=WORDS[Math.floor(Math.random()*WORDS.length)];
+  hangGuessed=new Set(); hangWrong=0;
+  document.getElementById('hangMsg').textContent='';
+  hangRender();
+}
+function hangRender(){
+  // Word display
+  const wEl=document.getElementById('hangWord'); wEl.innerHTML='';
+  [...hangWord].forEach(ch=>{
+    const div=document.createElement('div'); div.className='hang-char';
+    div.textContent=hangGuessed.has(ch)?ch:''; wEl.appendChild(div);
+  });
+  // Hearts
+  const hearts='??'.repeat(Math.max(0,6-hangWrong))+'??'.repeat(hangWrong);
+  document.getElementById('hangHearts').textContent=hearts;
+  // Letter buttons
+  const lEl=document.getElementById('hangLetters'); lEl.innerHTML='';
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(ch=>{
+    const btn=document.createElement('button'); btn.className='hang-letter';
+    btn.textContent=ch; btn.disabled=hangGuessed.has(ch);
+    btn.onclick=()=>hangGuess(ch); lEl.appendChild(btn);
+  });
+  // Canvas
+  drawHangman(hangWrong);
+}
+function hangGuess(ch){
+  hangGuessed.add(ch);
+  if(!hangWord.includes(ch)) hangWrong++;
+  // Win check
+  if([...hangWord].every(c=>hangGuessed.has(c))){
+    hangWins++;hangStreak++;if(hangStreak>hangBestStreak)hangBestStreak=hangStreak;
+    document.getElementById('hangWins').textContent=hangWins;
+    document.getElementById('hangStreak').textContent=hangBestStreak;
+    document.getElementById('hangMsg').textContent='?? You got it!';
+    addXP(12,'Hangman win!');
+    submitGameScore('hangman',hangWins,0,s=>{if(s>=5)unlockSticker('hangman_hero');});
+    setTimeout(hangNew,1600); return;
+  }
+  // Lose check
+  if(hangWrong>=6){
+    hangStreak=0;
+    document.getElementById('hangMsg').textContent=`?? It was: ${hangWord}`;
+    addXP(2,'Good try!');
+    setTimeout(hangNew,2000); return;
+  }
+  hangRender();
+}
+function drawHangman(wrongs){
+  const cv=document.getElementById('hangCanvas'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='rgba(232,232,255,.7)'; ctx.lineWidth=3; ctx.lineCap='round';
+  // Gallows
+  ctx.beginPath();
+  ctx.moveTo(20,180);ctx.lineTo(160,180); // ground
+  ctx.moveTo(50,180);ctx.lineTo(50,20);   // pole
+  ctx.moveTo(50,20); ctx.lineTo(120,20);  // top bar
+  ctx.moveTo(120,20);ctx.lineTo(120,42);  // rope
+  ctx.stroke();
+  if(wrongs<1) return;
+  // Head
+  ctx.beginPath();ctx.arc(120,56,14,0,Math.PI*2);ctx.stroke();
+  if(wrongs<2) return;
+  // Body
+  ctx.beginPath();ctx.moveTo(120,70);ctx.lineTo(120,118);ctx.stroke();
+  if(wrongs<3) return;
+  // Left arm
+  ctx.beginPath();ctx.moveTo(120,82);ctx.lineTo(96,104);ctx.stroke();
+  if(wrongs<4) return;
+  // Right arm
+  ctx.beginPath();ctx.moveTo(120,82);ctx.lineTo(144,104);ctx.stroke();
+  if(wrongs<5) return;
+  // Left leg
+  ctx.beginPath();ctx.moveTo(120,118);ctx.lineTo(96,148);ctx.stroke();
+  if(wrongs<6) return;
+  // Right leg
+  ctx.beginPath();ctx.moveTo(120,118);ctx.lineTo(144,148);ctx.stroke();
+}
+hangNew();
+
+// --------------------------------------------------------------
+//  GAME 9: CLICKER / IDLE GAME
+// --------------------------------------------------------------
+const UPGRADES=[
+  {id:'cursor', name:'Auto Cursor ???', cost:50,  cps:1,  count:0, desc:'Clicks once per second'},
+  {id:'robot',  name:'Click Robot ??', cost:200, cps:5,  count:0, desc:'Clicks 5x per second'},
+  {id:'wizard', name:'Click Wizard ??',cost:800, cps:20, count:0, desc:'Clicks 20x per second'},
+  {id:'dragon', name:'Click Dragon ??',cost:3000,cps:80, count:0, desc:'Clicks 80x per second'},
+];
+let clickTotal=0, clickCPS=0, clickerInterval;
+function doClick(){
+  const multi=1+Math.floor(clickTotal/500);
+  clickTotal+=multi;
+  clickerUpdate();
+  addXP(0.02,'');
+  if(clickTotal>=200) unlockSticker('click_king');
+}
+function buyUpgrade(id){
+  const u=UPGRADES.find(x=>x.id===id);
+  if(!u||clickTotal<u.cost) return;
+  clickTotal-=u.cost; u.count++; u.cost=Math.ceil(u.cost*1.5);
+  clickCPS=UPGRADES.reduce((a,b)=>a+b.cps*b.count,0);
+  clickerUpdate();
+}
+function clickerUpdate(){
+  document.getElementById('clickTotal').textContent=Math.floor(clickTotal).toLocaleString();
+  document.getElementById('clickCPS').textContent=`+${clickCPS} / sec`;
+  const hi=getHighScore('clicker');
+  if(clickTotal>hi) submitGameScore('clicker',Math.floor(clickTotal),0,()=>{});
+  document.getElementById('clickHi').textContent=Math.floor(Math.max(hi,clickTotal)).toLocaleString();
+  clickerRender();
+}
+function clickerRender(){
+  const el=document.getElementById('upgradeList'); if(!el) return;
+  el.innerHTML='';
+  UPGRADES.forEach(u=>{
+    const btn=document.createElement('button'); btn.className='upgrade-btn';
+    btn.disabled=clickTotal<u.cost;
+    btn.innerHTML=`<span>${u.name}<br><small style="font-weight:700;opacity:.6">${u.desc} (×${u.count})</small></span><span style="color:var(--yellow)">${u.cost.toLocaleString()} ??</span>`;
+    btn.onclick=()=>buyUpgrade(u.id); el.appendChild(btn);
+  });
+}
+function clickReset(){
+  clickTotal=0;clickCPS=0;UPGRADES.forEach(u=>{u.count=0;u.cost=[50,200,800,3000][UPGRADES.indexOf(u)];});
+  clearInterval(clickerInterval);clickerUpdate();
+  clickerInterval=setInterval(()=>{if(clickCPS>0){clickTotal+=clickCPS/20;clickerUpdate();}},50);
+}
+clickReset();
+
+// --------------------------------------------------------------
+//  GAME 10: TYPING RACE
+// --------------------------------------------------------------
+const SENTENCES=[
+  "The quick brown fox jumps over the lazy dog.",
+  "Pack my box with five dozen liquor jugs.",
+  "How vexingly quick daft zebras jump!",
+  "Two driven jocks help fax my big quiz.",
+  "Amazingly few discotheques provide jukeboxes.",
+  "The five boxing wizards jump quickly.",
+  "Sphinx of black quartz, judge my vow.",
+  "Crazy Fredrick bought many very exquisite opal jewels.",
+  "We promptly judged antique ivory buckles for the next prize.",
+  "A wizard's job is to vex chumps quickly in fog.",
+];
+let typeSentence='', typeIdx=0, typeStart=null, typeTimer=null, typeDone=false;
+function typeNext(){
+  typeSentence=SENTENCES[Math.floor(Math.random()*SENTENCES.length)];
+  typeIdx=0;typeStart=null;typeDone=false;
+  clearInterval(typeTimer);
+  document.getElementById('typeTimer').textContent='0.0s';
+  document.getElementById('type-input').value='';
+  document.getElementById('type-input').disabled=false;
+  document.getElementById('type-input').focus();
+  document.getElementById('typeResult').classList.remove('show');
+  typeRender();
+}
+function typeRender(){
+  const el=document.getElementById('typeSentence'); el.innerHTML='';
+  [...typeSentence].forEach((ch,i)=>{
+    const span=document.createElement('span');
+    if(i<typeIdx) span.className=ch===document.getElementById('type-input').value[i]?'correct':'wrong';
+    else if(i===typeIdx) span.className='current';
+    span.textContent=ch; el.appendChild(span);
+  });
+}
+function typeInput(){
+  if(typeDone) return;
+  const inp=document.getElementById('type-input');
+  const val=inp.value;
+  if(!typeStart&&val.length>0){ typeStart=Date.now(); typeTimer=setInterval(()=>{ document.getElementById('typeTimer').textContent=((Date.now()-typeStart)/1000).toFixed(1)+'s'; },100); }
+  typeIdx=val.length; typeRender();
+  if(val===typeSentence){
+    typeDone=true;clearInterval(typeTimer);
+    const secs=(Date.now()-typeStart)/1000;
+    const words=typeSentence.split(' ').length;
+    const wpm=Math.round((words/secs)*60);
+    const correct=[...val].filter((c,i)=>c===typeSentence[i]).length;
+    const acc=Math.round((correct/typeSentence.length)*100);
+    document.getElementById('typeWPM').textContent=wpm;
+    document.getElementById('typeAcc').textContent=`${acc}% accuracy · ${secs.toFixed(1)}s`;
+    document.getElementById('typeResult').classList.add('show');
+    document.getElementById('type-input').disabled=true;
+    submitGameScore('typing',wpm,Math.floor(wpm/4),s=>{if(s>=35)unlockSticker('typing_speed');});
+  }
+}
+typeNext();
+
+// --------------------------------------------------------------
+//  GAME 11: POKÉMON BATTLE
+// --------------------------------------------------------------
+// -- PK DATA --------------------------------------------------
+const PK_STARTERS=[
+  {name:'Bulbasaur', sprite:'??',type:'grass',   baseHP:45,baseAtk:49, moves:[{name:'Vine Whip',type:'grass',power:35},{name:'Tackle',type:'normal',power:28},{name:'Razor Leaf',type:'grass',power:55},{name:'Growl',type:'normal',power:0}]},
+  {name:'Charmander',sprite:'??',type:'fire',    baseHP:39,baseAtk:52, moves:[{name:'Ember',type:'fire',power:40},{name:'Scratch',type:'normal',power:28},{name:'Flamethrower',type:'fire',power:65},{name:'Growl',type:'normal',power:0}]},
+  {name:'Squirtle',  sprite:'??',type:'water',   baseHP:44,baseAtk:48, moves:[{name:'Water Gun',type:'water',power:40},{name:'Tackle',type:'normal',power:28},{name:'Surf',type:'water',power:60},{name:'Tail Whip',type:'normal',power:0}]},
+  {name:'Pikachu',   sprite:'?',type:'electric',baseHP:35,baseAtk:55, moves:[{name:'ThunderShock',type:'electric',power:40},{name:'Quick Attack',type:'normal',power:32},{name:'Thunderbolt',type:'electric',power:65},{name:'Growl',type:'normal',power:0}]},
+  {name:'Eevee',     sprite:'??',type:'normal',  baseHP:55,baseAtk:45, moves:[{name:'Tackle',type:'normal',power:32},{name:'Swift',type:'normal',power:45},{name:'Take Down',type:'normal',power:55},{name:'Bite',type:'dark',power:40}]},
+  {name:'Meowth',    sprite:'??',type:'normal',  baseHP:40,baseAtk:45, moves:[{name:'Scratch',type:'normal',power:30},{name:'Fury Swipes',type:'normal',power:48},{name:'Pay Day',type:'normal',power:40},{name:'Growl',type:'normal',power:0}]},
+];
+// Keep old STARTERS alias so switchTab init map still works
+const STARTERS = PK_STARTERS;
+const PK_WILD=[
+  {name:'Pidgey',   sprite:'??', type:'flying',  baseHP:40, baseAtk:45, moves:[{name:'Gust',type:'flying',power:40},{name:'Tackle',type:'normal',power:25},{name:'Wing Attack',type:'flying',power:50},{name:'Quick Attack',type:'normal',power:30}]},
+  {name:'Rattata',  sprite:'??', type:'normal',  baseHP:30, baseAtk:56, moves:[{name:'Tackle',type:'normal',power:30},{name:'Quick Attack',type:'normal',power:35},{name:'Hyper Fang',type:'normal',power:55},{name:'Bite',type:'dark',power:40}]},
+  {name:'Geodude',  sprite:'??', type:'rock',    baseHP:40, baseAtk:80, moves:[{name:'Rock Throw',type:'rock',power:50},{name:'Tackle',type:'normal',power:25},{name:'Rock Blast',type:'rock',power:55},{name:'Magnitude',type:'ground',power:60}]},
+  {name:'Gastly',   sprite:'??', type:'ghost',   baseHP:30, baseAtk:65, moves:[{name:'Lick',type:'ghost',power:30},{name:'Shadow Ball',type:'ghost',power:55},{name:'Night Shade',type:'ghost',power:45},{name:'Spite',type:'ghost',power:0}]},
+  {name:'Magikarp', sprite:'??', type:'water',   baseHP:20, baseAtk:10, moves:[{name:'Splash',type:'normal',power:0},{name:'Tackle',type:'normal',power:10},{name:'Flail',type:'normal',power:20},{name:'Tackle',type:'normal',power:10}]},
+  {name:'Psyduck',  sprite:'??', type:'water',   baseHP:50, baseAtk:52, moves:[{name:'Water Gun',type:'water',power:40},{name:'Confusion',type:'psychic',power:50},{name:'Psybeam',type:'psychic',power:60},{name:'Scratch',type:'normal',power:25}]},
+  {name:'Growlithe',sprite:'??', type:'fire',    baseHP:55, baseAtk:70, moves:[{name:'Ember',type:'fire',power:40},{name:'Bite',type:'dark',power:40},{name:'Flamethrower',type:'fire',power:65},{name:'Roar',type:'normal',power:0}]},
+  {name:'Slowpoke', sprite:'??', type:'water',   baseHP:90, baseAtk:65, moves:[{name:'Surf',type:'water',power:65},{name:'Psychic',type:'psychic',power:80},{name:'Confusion',type:'psychic',power:50},{name:'Water Gun',type:'water',power:40}]},
+  {name:'Snorlax',  sprite:'??', type:'normal',  baseHP:160,baseAtk:110,moves:[{name:'Body Slam',type:'normal',power:85},{name:'Hyper Beam',type:'normal',power:110},{name:'Crunch',type:'dark',power:80},{name:'Yawn',type:'normal',power:0}]},
+  {name:'Jolteon',  sprite:'?', type:'electric',baseHP:65, baseAtk:65, moves:[{name:'Thunderbolt',type:'electric',power:65},{name:'Pin Missile',type:'bug',power:50},{name:'Thunder',type:'electric',power:90},{name:'Quick Attack',type:'normal',power:30}]},
+  {name:'Flareon',  sprite:'??', type:'fire',    baseHP:65, baseAtk:130,moves:[{name:'Flamethrower',type:'fire',power:65},{name:'Fire Blast',type:'fire',power:90},{name:'Bite',type:'dark',power:40},{name:'Ember',type:'fire',power:40}]},
+  {name:'Vaporeon', sprite:'??', type:'water',   baseHP:130,baseAtk:65, moves:[{name:'Surf',type:'water',power:65},{name:'Aurora Beam',type:'ice',power:55},{name:'Hydro Pump',type:'water',power:90},{name:'Water Gun',type:'water',power:40}]},
+  {name:'Gengar',   sprite:'??', type:'ghost',   baseHP:60, baseAtk:65, moves:[{name:'Shadow Ball',type:'ghost',power:65},{name:'Night Shade',type:'ghost',power:55},{name:'Hypnosis',type:'psychic',power:0},{name:'Dream Eater',type:'psychic',power:80}]},
+  {name:'Lapras',   sprite:'??', type:'water',   baseHP:130,baseAtk:85, moves:[{name:'Surf',type:'water',power:65},{name:'Ice Beam',type:'ice',power:65},{name:'Body Slam',type:'normal',power:85},{name:'Psychic',type:'psychic',power:80}]},
+  {name:'Charizard',sprite:'??', type:'fire',    baseHP:78, baseAtk:84, moves:[{name:'Flamethrower',type:'fire',power:70},{name:'Wing Attack',type:'flying',power:55},{name:'Fire Blast',type:'fire',power:90},{name:'Dragon Claw',type:'dragon',power:65}]},
+  {name:'Blastoise',sprite:'??', type:'water',   baseHP:79, baseAtk:83, moves:[{name:'Hydro Pump',type:'water',power:90},{name:'Surf',type:'water',power:65},{name:'Ice Beam',type:'ice',power:65},{name:'Bite',type:'dark',power:40}]},
+  {name:'Venusaur', sprite:'??', type:'grass',   baseHP:80, baseAtk:82, moves:[{name:'Petal Dance',type:'grass',power:90},{name:'Razor Leaf',type:'grass',power:55},{name:'Earthquake',type:'ground',power:80},{name:'Vine Whip',type:'grass',power:35}]},
+  {name:'Raichu',   sprite:'?', type:'electric',baseHP:60, baseAtk:90, moves:[{name:'Thunder',type:'electric',power:100},{name:'Thunderbolt',type:'electric',power:65},{name:'Iron Tail',type:'steel',power:65},{name:'Quick Attack',type:'normal',power:30}]},
+  {name:'Mewtwo',   sprite:'??', type:'psychic', baseHP:106,baseAtk:110,moves:[{name:'Psychic',type:'psychic',power:90},{name:'Shadow Ball',type:'ghost',power:80},{name:'Ice Beam',type:'ice',power:65},{name:'Thunderbolt',type:'electric',power:65}]},
+  {name:'Dragonite',sprite:'??', type:'dragon',  baseHP:91, baseAtk:134,moves:[{name:'Dragon Claw',type:'dragon',power:80},{name:'Thunder',type:'electric',power:90},{name:'Blizzard',type:'ice',power:90},{name:'Hyper Beam',type:'normal',power:110}]},
+];
+const PK_EVO={
+  'Bulbasaur': {into:'Ivysaur',   level:16,sprite:'??',type:'grass',   baseHP:60, baseAtk:62},
+  'Ivysaur':   {into:'Venusaur',  level:32,sprite:'??',type:'grass',   baseHP:80, baseAtk:82},
+  'Charmander':{into:'Charmeleon',level:16,sprite:'??',type:'fire',    baseHP:58, baseAtk:64},
+  'Charmeleon':{into:'Charizard', level:36,sprite:'??',type:'fire',    baseHP:78, baseAtk:84},
+  'Squirtle':  {into:'Wartortle', level:16,sprite:'??',type:'water',   baseHP:59, baseAtk:63},
+  'Wartortle': {into:'Blastoise', level:36,sprite:'??',type:'water',   baseHP:79, baseAtk:83},
+  'Pikachu':   {into:'Raichu',    level:22,sprite:'?',type:'electric',baseHP:60, baseAtk:90},
+  'Eevee':     {into:'Vaporeon',  level:20,sprite:'??',type:'water',   baseHP:130,baseAtk:65},
+  'Magikarp':  {into:'Gyarados',  level:20,sprite:'??',type:'water',   baseHP:95, baseAtk:125,moves:[{name:'Surf',type:'water',power:65},{name:'Bite',type:'dark',power:40},{name:'Ice Fang',type:'ice',power:65},{name:'Thrash',type:'normal',power:90}]},
+  'Pidgey':    {into:'Pidgeotto', level:18,sprite:'??',type:'flying',  baseHP:63, baseAtk:60},
+  'Pidgeotto': {into:'Pidgeot',   level:36,sprite:'??',type:'flying',  baseHP:83, baseAtk:80},
+  'Gastly':    {into:'Haunter',   level:25,sprite:'??',type:'ghost',   baseHP:45, baseAtk:75},
+  'Haunter':   {into:'Gengar',    level:38,sprite:'??',type:'ghost',   baseHP:60, baseAtk:65},
+  'Geodude':   {into:'Graveler',  level:25,sprite:'??',type:'rock',    baseHP:55, baseAtk:95},
+  'Graveler':  {into:'Golem',     level:36,sprite:'??',type:'rock',    baseHP:80, baseAtk:120},
+  'Slowpoke':  {into:'Slowbro',   level:37,sprite:'??',type:'water',   baseHP:95, baseAtk:75},
+};
+const PK_GYMS=[
+  {name:'Brock',    badge:'Boulder Badge',sprite:'??',requiredBadges:0,ace:{name:'Onix',    sprite:'??',type:'rock',   baseHP:35, baseAtk:45, level:14,moves:[{name:'Rock Throw',type:'rock',power:50},{name:'Tackle',type:'normal',power:25},{name:'Rock Blast',type:'rock',power:55},{name:'Screech',type:'normal',power:0}]}},
+  {name:'Misty',    badge:'Cascade Badge',sprite:'??',requiredBadges:1,ace:{name:'Starmie', sprite:'?',type:'water', baseHP:60, baseAtk:75, level:21,moves:[{name:'Surf',type:'water',power:65},{name:'Psybeam',type:'psychic',power:60},{name:'Bubble Beam',type:'water',power:50},{name:'Ice Beam',type:'ice',power:65}]}},
+  {name:'Lt. Surge',badge:'Thunder Badge', sprite:'?',requiredBadges:2,ace:{name:'Raichu',  sprite:'?',type:'electric',baseHP:60,baseAtk:90,level:28,moves:[{name:'Thunderbolt',type:'electric',power:65},{name:'Thunder',type:'electric',power:90},{name:'Iron Tail',type:'steel',power:65},{name:'Quick Attack',type:'normal',power:30}]}},
+  {name:'Erika',    badge:'Rainbow Badge', sprite:'??',requiredBadges:3,ace:{name:'Vileplume',sprite:'??',type:'grass',baseHP:75,baseAtk:80,level:35,moves:[{name:'Petal Dance',type:'grass',power:90},{name:'Razor Leaf',type:'grass',power:55},{name:'Sleep Powder',type:'grass',power:0},{name:'Mega Drain',type:'grass',power:40}]}},
+];
+const PK_BAG_INFO={
+  potion:      {label:'Potion',      emoji:'??',heal:20,  desc:'Restores 20 HP'},
+  superPotion: {label:'Super Potion',emoji:'??',heal:50,  desc:'Restores 50 HP'},
+  fullRestore: {label:'Full Restore',emoji:'?',heal:9999,desc:'Fully restores HP'},
+  pokeball:    {label:'Poke Ball',   emoji:'??',rate:0.35,desc:'Catch rate 35%'},
+  greatball:   {label:'Great Ball',  emoji:'??',rate:0.55,desc:'Catch rate 55%'},
+  ultraball:   {label:'Ultra Ball',  emoji:'??',rate:0.75,desc:'Catch rate 75%'},
+};
+const TYPE_EFF={
+  fire:    {grass:2,ice:2,bug:2,water:.5,rock:.5,fire:.5,dragon:.5},
+  water:   {fire:2,rock:2,ground:2,grass:.5,water:.5,electric:.5,dragon:.5},
+  grass:   {water:2,rock:2,ground:2,fire:.5,grass:.5,flying:.5,bug:.5,dragon:.5},
+  electric:{water:2,flying:2,grass:.5,electric:.5,ground:0,dragon:.5},
+  ice:     {grass:2,ground:2,flying:2,dragon:2,fire:.5,water:.5,ice:.5},
+  psychic: {fighting:2,poison:2,psychic:.5,dark:0},
+  ghost:   {ghost:2,psychic:2,dark:.5,normal:0},
+  rock:    {fire:2,ice:2,flying:2,bug:2,fighting:.5,ground:.5},
+  dark:    {ghost:2,psychic:2,fighting:.5,dark:.5},
+  dragon:  {dragon:2},
+  normal:  {rock:.5,ghost:0},
+  flying:  {grass:2,fighting:2,bug:2,rock:.5,electric:.5},
+  bug:     {grass:2,psychic:2,dark:2,fire:.5,flying:.5,rock:.5},
+  ground:  {fire:2,electric:2,rock:2,steel:2,grass:.5,bug:.5,flying:0},
+  steel:   {rock:2,ice:2,fairy:2,fire:.5,water:.5,electric:.5,steel:.5},
+};
+function pkEff(mt,dt){const c=TYPE_EFF[mt]||{};return c[dt]!==undefined?c[dt]:1;}
+const TC={grass:'#22c55e',fire:'#ff6b6b',water:'#60a5fa',electric:'#ffe66d',psychic:'#e879f9',ghost:'#a855f7',ice:'#7dd3fc',rock:'#a8a29e',dark:'#78716c',dragon:'#818cf8',normal:'#d4d4d4',flying:'#93c5fd',bug:'#86efac',ground:'#d97706',steel:'#94a3b8',fairy:'#f9a8d4'};
+
+let pkParty=[],pkBag={potion:3,superPotion:1,fullRestore:0,pokeball:5,greatball:2,ultraball:0};
+let pkBadges=0,pkCaught=0,pkWins=0;
+let pkActiveIdx=0,pkEnemy=null,pkEHP=0,pkEMax=0,pkBusy=false;
+let pkInGym=false,pkGymRef=null;
+
+function pkComputeStats(p){
+  p.maxHP=p.baseHP+(p.level-1)*5;
+  p.atk=p.baseAtk+(p.level-1)*3;
+  if(p.currentHP===undefined)p.currentHP=p.maxHP;
+  p.xp=p.xp||0;
+  p.xpNext=p.level*p.level*5;
+}
+function pkMake(tmpl,lvl){
+  const p=JSON.parse(JSON.stringify(tmpl));
+  p.level=lvl;pkComputeStats(p);p.currentHP=p.maxHP;p.xp=0;
+  return p;
+}
+function pkActive(){return pkParty[pkActiveIdx]||null;}
+function pkSleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function pkView(v){
+  document.querySelectorAll('[data-pk]').forEach(b=>b.classList.toggle('active',b.dataset.pk===v));
+  document.getElementById('pkBattleView').style.display=v==='battle'?'block':'none';
+  document.getElementById('pkPartyView').style.display=v==='party'?'block':'none';
+  document.getElementById('pkGymView').style.display=v==='gym'?'block':'none';
+  document.getElementById('pkBagView').style.display=v==='bag'?'block':'none';
+  if(v==='party')pkRenderParty();
+  if(v==='gym')pkRenderGym();
+  if(v==='bag')pkRenderBag();
+}
+function pkLog(msg){const el=document.getElementById('pkLog');if(el)el.textContent=msg;}
+function pkCalcDmg(move,atk,defType){
+  if(!move.power)return 0;
+  const base=(move.power/50)*(atk/50)*18;
+  const eff=pkEff(move.type,defType);
+  return Math.max(1,Math.round(base*eff*(0.85+Math.random()*0.15)));
+}
+function pkEffText(eff){
+  if(eff>=2)return' Super effective! ??';
+  if(eff===0)return' No effect...';
+  if(eff<1)return' Not very effective...';
+  return'';
+}
+function pkShakeEl(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.style.animation='none';void el.offsetWidth;el.style.animation='pkShake .4s';
+}
+function pkUpdateBars(){
+  const pa=pkActive();if(!pa)return;
+  const pp=Math.max(0,(pa.currentHP/pa.maxHP)*100);
+  const ep=Math.max(0,(pkEHP/pkEMax)*100);
+  const xpp=Math.max(0,((pa.xp||0)/pa.xpNext)*100);
+  const pb=document.getElementById('pkPlayerHPBar');
+  const eb=document.getElementById('pkEnemyHPBar');
+  const xb=document.getElementById('pkPlayerXPBar');
+  if(pb){pb.style.width=pp+'%';pb.className='pk-hp-fill'+(pp<25?' crit':pp<50?' low':'');}
+  if(eb){eb.style.width=ep+'%';eb.className='pk-hp-fill'+(ep<25?' crit':ep<50?' low':'');}
+  if(xb)xb.style.width=xpp+'%';
+  const pht=document.getElementById('pkPlayerHPNum');
+  const eht=document.getElementById('pkEnemyHPNum');
+  if(pht)pht.textContent=pa.currentHP+'/'+pa.maxHP;
+  if(eht)eht.textContent=pkEHP+'/'+pkEMax;
+}
+function pkUpdateUI(){
+  const pa=pkActive();if(!pa)return;
+  const s=document.getElementById('pkPlayerSprite');
+  const n=document.getElementById('pkPlayerName');
+  const l=document.getElementById('pkPlayerLvl');
+  if(s)s.textContent=pa.sprite;
+  if(n)n.textContent=pa.name;
+  if(l)l.textContent='Lv.'+pa.level;
+  if(pkEnemy){
+    const es=document.getElementById('pkEnemySprite');
+    const en=document.getElementById('pkEnemyName');
+    const el=document.getElementById('pkEnemyLvl');
+    if(es)es.textContent=pkEnemy.sprite;
+    if(en)en.textContent=(pkInGym?'':'Wild ')+pkEnemy.name;
+    if(el)el.textContent='Lv.'+pkEnemy.level;
+  }
+  const cc=document.getElementById('pkCaughtNum');
+  const bc=document.getElementById('pkBadgeNum');
+  const wc=document.getElementById('pkWinsNum');
+  if(cc)cc.textContent=pkCaught;
+  if(bc)bc.textContent=pkBadges;
+  if(wc)wc.textContent=pkWins;
+  pkUpdateBars();
+}
+function pkSpawnWild(){
+  const tmpl=PK_WILD[Math.floor(Math.random()*PK_WILD.length)];
+  const base=pkActive()?pkActive().level:5;
+  const lvl=Math.max(3,Math.round(base*0.8+pkWins*0.3+Math.random()*3));
+  pkEnemy=pkMake(tmpl,lvl);
+  pkEMax=pkEHP=pkEnemy.maxHP;
+  pkInGym=false;pkGymRef=null;
+  pkUpdateUI();
+  pkLog('A wild '+pkEnemy.name+' appeared! '+pkEnemy.sprite);
+  pkShowMenu();
+  const bs=document.getElementById('pkBattleScreen');
+  const ss=document.getElementById('pkSelectScreen');
+  if(bs)bs.style.display='block';
+  if(ss)ss.style.display='none';
+}
+async function pkStartGymBattle(gym){
+  if(pkBadges<gym.requiredBadges){pkView('battle');pkLog('Need '+gym.requiredBadges+' badge(s) first!');return;}
+  if(!pkActive()||pkActive().currentHP<=0){pkView('battle');pkLog('Lead Pokemon fainted! Heal first.');return;}
+  pkInGym=true;pkGymRef=gym;
+  pkEnemy=pkMake(gym.ace,gym.ace.level);
+  pkEMax=pkEHP=pkEnemy.maxHP;
+  pkView('battle');
+  const bs=document.getElementById('pkBattleScreen');
+  const ss=document.getElementById('pkSelectScreen');
+  if(bs)bs.style.display='block';
+  if(ss)ss.style.display='none';
+  pkUpdateUI();
+  pkLog(gym.name+' wants to battle! Go '+pkEnemy.name+'!');
+  await pkSleep(400);
+  pkShowMenu();
+}
+function pkShowMenu(){
+  document.getElementById('pkMenuBtns').style.display='grid';
+  document.getElementById('pkMovesPanel').style.display='none';
+  document.getElementById('pkItemsPanel').style.display='none';
+  document.getElementById('pkSwitchPanel').style.display='none';
+  pkBusy=false;
+}
+function pkShowMoves(){
+  document.getElementById('pkMenuBtns').style.display='none';
+  document.getElementById('pkMovesPanel').style.display='grid';
+  document.getElementById('pkItemsPanel').style.display='none';
+  document.getElementById('pkSwitchPanel').style.display='none';
+  const pa=pkActive();if(!pa)return;
+  const mp=document.getElementById('pkMovesPanel');mp.innerHTML='';
+  pa.moves.forEach(m=>{
+    const col=TC[m.type]||'#aaa';
+    const btn=document.createElement('button');
+    btn.style.cssText='padding:8px 5px;border-radius:9px;border:1px solid '+col+'55;background:'+col+'18;color:var(--text);cursor:pointer;font-size:11px;font-weight:900;';
+    btn.innerHTML='<strong>'+m.name+'</strong><br><span style="opacity:.6;font-size:9px">'+m.type.toUpperCase()+(m.power?' PWR '+m.power:'')+'</span>';
+    btn.onclick=()=>pkUseMove(m);
+    mp.appendChild(btn);
+  });
+  const back=document.createElement('button');
+  back.style.cssText='padding:8px;border-radius:9px;border:1px solid #ffffff33;background:#ffffff11;color:var(--text);cursor:pointer;font-size:11px;font-weight:900;grid-column:1/-1;';
+  back.textContent='Back';back.onclick=pkShowMenu;
+  mp.appendChild(back);
+}
+function pkShowItems(){
+  document.getElementById('pkMenuBtns').style.display='none';
+  document.getElementById('pkMovesPanel').style.display='none';
+  document.getElementById('pkItemsPanel').style.display='grid';
+  document.getElementById('pkSwitchPanel').style.display='none';
+  const ip=document.getElementById('pkItemsPanel');ip.innerHTML='';
+  ['potion','superPotion','fullRestore','pokeball','greatball','ultraball'].forEach(key=>{
+    const info=PK_BAG_INFO[key];const qty=pkBag[key]||0;
+    const btn=document.createElement('button');
+    btn.style.cssText='padding:8px 4px;border-radius:9px;border:1px solid #ffffff22;background:#ffffff0f;color:var(--text);cursor:pointer;font-size:10px;font-weight:900;opacity:'+(qty>0?1:.4)+';';
+    btn.innerHTML=info.emoji+' '+info.label+'<br><span style="opacity:.6;font-size:9px">x'+qty+'</span>';
+    btn.disabled=qty<=0;
+    if(info.heal)btn.onclick=()=>pkUseHeal(key,info.heal,true);
+    else btn.onclick=()=>pkUseBall(key,info.rate);
+    ip.appendChild(btn);
+  });
+  const back=document.createElement('button');
+  back.style.cssText='padding:8px;border-radius:9px;border:1px solid #ffffff33;background:#ffffff11;color:var(--text);cursor:pointer;font-size:11px;font-weight:900;grid-column:1/-1;';
+  back.textContent='Back';back.onclick=pkShowMenu;
+  ip.appendChild(back);
+}
+function pkShowSwitch(){
+  document.getElementById('pkMenuBtns').style.display='none';
+  document.getElementById('pkMovesPanel').style.display='none';
+  document.getElementById('pkItemsPanel').style.display='none';
+  document.getElementById('pkSwitchPanel').style.display='block';
+  const sp=document.getElementById('pkSwitchPanel');sp.innerHTML='';
+  pkParty.forEach((p,i)=>{
+    if(i===pkActiveIdx)return;
+    const btn=document.createElement('button');
+    btn.style.cssText='display:block;width:100%;margin:4px 0;padding:8px;border-radius:9px;border:1px solid #ffffff22;background:#ffffff0f;color:var(--text);cursor:pointer;font-size:11px;font-weight:900;text-align:left;opacity:'+(p.currentHP>0?1:.35)+';';
+    btn.innerHTML=p.sprite+' '+p.name+' Lv.'+p.level+' <span style="opacity:.6">('+p.currentHP+'/'+p.maxHP+' HP)</span>';
+    btn.disabled=p.currentHP<=0;
+    btn.onclick=()=>pkDoSwitch(i);
+    sp.appendChild(btn);
+  });
+  const back=document.createElement('button');
+  back.style.cssText='display:block;width:100%;margin:4px 0;padding:8px;border-radius:9px;border:1px solid #ffffff33;background:#ffffff11;color:var(--text);cursor:pointer;font-size:11px;font-weight:900;';
+  back.textContent='Back';back.onclick=pkShowMenu;
+  sp.appendChild(back);
+}
+async function pkDoSwitch(i){
+  pkActiveIdx=i;pkUpdateUI();
+  pkLog('Go, '+pkActive().name+'! '+pkActive().sprite);
+  await pkSleep(600);
+  if(pkEnemy&&pkEHP>0){
+    const em=pkEnemy.moves[Math.floor(Math.random()*pkEnemy.moves.length)];
+    const eDmg=pkCalcDmg(em,pkEnemy.atk,pkActive().type);
+    pkLog(pkEnemy.name+' used '+em.name+'!'+pkEffText(pkEff(em.type,pkActive().type)));
+    pkShakeEl('pkPlayerSprite');
+    pkActive().currentHP=Math.max(0,pkActive().currentHP-eDmg);
+    pkUpdateBars();
+    await pkSleep(700);
+    if(pkActive().currentHP<=0){await pkHandleFaint();return;}
+  }
+  pkShowMenu();
+}
+async function pkUseMove(move){
+  if(pkBusy)return;pkBusy=true;
+  document.getElementById('pkMenuBtns').style.display='none';
+  document.getElementById('pkMovesPanel').style.display='none';
+  const pa=pkActive();if(!pa)return;
+  const eff=pkEff(move.type,pkEnemy.type);
+  const dmg=pkCalcDmg(move,pa.atk,pkEnemy.type);
+  pkLog(pa.name+' used '+move.name+'!'+(move.power?pkEffText(eff):''));
+  pkShakeEl('pkEnemySprite');
+  pkEHP=Math.max(0,pkEHP-dmg);pkUpdateBars();
+  await pkSleep(650);
+  if(pkEHP<=0){
+    const esprite=document.getElementById('pkEnemySprite');
+    if(esprite)esprite.style.opacity='0.2';
+    if(pkInGym){await pkGymWin();return;}
+    pkWins++;
+    const xpGain=Math.round((pkEnemy.level*8)*(1+pkBadges*0.1));
+    pkLog('Wild '+pkEnemy.name+' fainted! +'+xpGain+' XP!');
+    if(typeof addXP==='function')addXP(10,'Pokemon battle win!');
+    if(pkWins>=5&&typeof unlockSticker==='function')unlockSticker('poke_master');
+    await pkGainXP(xpGain);
+    await pkSleep(600);
+    const esprite2=document.getElementById('pkEnemySprite');
+    if(esprite2)esprite2.style.opacity='1';
+    pkSpawnWild();return;
+  }
+  const em=pkEnemy.moves[Math.floor(Math.random()*pkEnemy.moves.length)];
+  const eEff=pkEff(em.type,pa.type);
+  const eDmg=pkCalcDmg(em,pkEnemy.atk,pa.type);
+  pkLog(pkEnemy.name+' used '+em.name+'!'+(em.power?pkEffText(eEff):''));
+  pkShakeEl('pkPlayerSprite');
+  pa.currentHP=Math.max(0,pa.currentHP-eDmg);pkUpdateBars();
+  await pkSleep(650);
+  if(pa.currentHP<=0){await pkHandleFaint();return;}
+  pkShowMenu();
+}
+async function pkGymWin(){
+  const gym=pkGymRef;
+  pkBadges++;
+  pkLog('You defeated '+gym.name+'! Got the '+gym.badge+'! '+gym.sprite);
+  pkBag.superPotion=(pkBag.superPotion||0)+2;
+  pkBag.greatball=(pkBag.greatball||0)+3;
+  const xpGain=pkEnemy.level*12;
+  if(typeof addXP==='function')addXP(25,'Gym badge earned!');
+  await pkGainXP(xpGain);
+  await pkSleep(1000);
+  pkInGym=false;pkGymRef=null;
+  const esprite=document.getElementById('pkEnemySprite');
+  if(esprite)esprite.style.opacity='1';
+  pkSpawnWild();pkRenderGym();
+}
+async function pkHandleFaint(){
+  const spEl=document.getElementById('pkPlayerSprite');
+  if(spEl)spEl.style.opacity='0.2';
+  pkLog(pkActive().name+' fainted! ??');
+  await pkSleep(1000);
+  if(spEl)spEl.style.opacity='1';
+  const next=pkParty.findIndex((p,i)=>i!==pkActiveIdx&&p.currentHP>0);
+  if(next>=0){
+    pkActiveIdx=next;
+    pkLog('Go, '+pkActive().name+'!');
+    pkUpdateUI();await pkSleep(600);pkShowMenu();
+  } else {
+    pkLog('All Pokemon fainted... Healing to 50% HP.');
+    await pkSleep(1200);
+    pkParty.forEach(p=>{p.currentHP=Math.max(1,Math.floor(p.maxHP*0.5));});
+    pkActiveIdx=0;pkUpdateUI();pkSpawnWild();
+  }
+}
+async function pkUseHeal(key,amt,inBattle){
+  if(pkBag[key]<=0)return;
+  if(pkBusy&&inBattle)return;
+  pkBusy=true;
+  pkBag[key]--;
+  const pa=pkActive();if(!pa)return;
+  const info=PK_BAG_INFO[key];
+  const healed=Math.min(pa.maxHP-pa.currentHP,amt===9999?pa.maxHP:amt);
+  pa.currentHP=Math.min(pa.maxHP,pa.currentHP+(amt===9999?pa.maxHP:amt));
+  pkLog('Used '+info.label+'! Restored '+healed+' HP!');
+  pkUpdateBars();
+  if(inBattle&&pkEnemy&&pkEHP>0){
+    await pkSleep(700);
+    const em=pkEnemy.moves[Math.floor(Math.random()*pkEnemy.moves.length)];
+    const eDmg=pkCalcDmg(em,pkEnemy.atk,pa.type);
+    pkLog(pkEnemy.name+' used '+em.name+'!');
+    pkShakeEl('pkPlayerSprite');
+    pa.currentHP=Math.max(0,pa.currentHP-eDmg);pkUpdateBars();
+    await pkSleep(650);
+    if(pa.currentHP<=0){await pkHandleFaint();return;}
+  }
+  pkShowMenu();
+}
+async function pkUseBall(key,baseRate){
+  if(pkBusy)return;pkBusy=true;
+  if(pkInGym){pkLog("Can't catch gym Pokemon!");await pkSleep(700);pkShowMenu();return;}
+  if(pkBag[key]<=0){pkShowMenu();return;}
+  pkBag[key]--;
+  const info=PK_BAG_INFO[key];
+  const chance=Math.min(0.95,baseRate+(1-pkEHP/pkEMax)*0.7*0.35);
+  pkLog('Threw a '+info.label+'! '+info.emoji+' ...');
+  await pkSleep(1200);
+  if(Math.random()<chance){
+    pkCaught++;
+    pkLog('Gotcha! '+pkEnemy.name+' was caught!');
+    const caught=pkMake(pkEnemy,pkEnemy.level);
+    caught.currentHP=pkEHP;
+    if(pkParty.length<6)pkParty.push(caught);
+    if(typeof addXP==='function')addXP(15,'Pokemon caught!');
+    if(pkCaught>=5&&typeof unlockSticker==='function')unlockSticker('poke_master');
+    pkUpdateUI();await pkSleep(1000);pkSpawnWild();
+  } else {
+    pkLog('Oh no! '+pkEnemy.name+' broke free! ??');
+    const em=pkEnemy.moves[Math.floor(Math.random()*pkEnemy.moves.length)];
+    const eDmg=pkCalcDmg(em,pkEnemy.atk,pkActive().type);
+    pkShakeEl('pkPlayerSprite');
+    pkActive().currentHP=Math.max(0,pkActive().currentHP-eDmg);pkUpdateBars();
+    await pkSleep(650);
+    if(pkActive().currentHP<=0){await pkHandleFaint();return;}
+    pkShowMenu();
+  }
+}
+function pkRunAway(){
+  if(pkBusy||pkInGym)return;
+  pkLog('Got away safely! ??');
+  setTimeout(pkSpawnWild,900);
+}
+async function pkGainXP(amount){
+  const pa=pkActive();if(!pa)return;
+  pa.xp=(pa.xp||0)+amount;pkUpdateBars();
+  while(pa.xp>=pa.xpNext){
+    pa.xp-=pa.xpNext;pa.level++;pkComputeStats(pa);
+    pa.currentHP=Math.min(pa.currentHP+10,pa.maxHP);
+    pkLog(pa.name+' grew to Lv.'+pa.level+'!');pkUpdateUI();
+    await pkSleep(800);
+    const evo=PK_EVO[pa.name];
+    if(evo&&pa.level>=evo.level)await pkEvolve(pa,evo);
+  }
+  pkUpdateBars();
+}
+async function pkEvolve(poke,evo){
+  pkLog(poke.name+' is evolving...');
+  const sp=document.getElementById('pkPlayerSprite');
+  if(sp)sp.style.animation='evoFlash 1.5s 3';
+  await pkSleep(4500);
+  if(sp)sp.style.animation='';
+  poke.name=evo.into;poke.sprite=evo.sprite;poke.type=evo.type;
+  poke.baseHP=evo.baseHP;poke.baseAtk=evo.baseAtk;
+  if(evo.moves)poke.moves=evo.moves;
+  pkComputeStats(poke);poke.currentHP=Math.min(poke.currentHP,poke.maxHP);
+  pkLog(poke.name+' evolved!');pkUpdateUI();
+  await pkSleep(800);
+}
+function pkTrain(intensity){
+  const pa=pkActive();if(!pa){pkLog('No active Pokemon!');return;}
+  if(pa.currentHP<=0){pkLog(pa.name+' fainted! Heal first.');return;}
+  const config={light:{xp:25,hpCost:0},medium:{xp:60,hpCost:15},intense:{xp:120,hpCost:30}};
+  const c=config[intensity];
+  if(pa.currentHP<=c.hpCost){pkLog('Not enough HP!');return;}
+  pa.currentHP=Math.max(1,pa.currentHP-c.hpCost);
+  pkLog(pa.name+' trained! +'+c.xp+' XP'+(c.hpCost?' (-'+c.hpCost+' HP)':''));
+  pkGainXP(c.xp);pkView('battle');
+}
+function pkRenderParty(){
+  const g=document.getElementById('pkPartyGrid');if(!g)return;
+  g.innerHTML='';
+  if(pkParty.length===0){g.innerHTML='<p style="opacity:.5;grid-column:1/-1;text-align:center">No Pokemon yet! Choose a starter.</p>';return;}
+  pkParty.forEach((p,i)=>{
+    const col=TC[p.type]||'#aaa';
+    const hp=Math.max(0,(p.currentHP/p.maxHP)*100);
+    const xpp=Math.max(0,((p.xp||0)/p.xpNext)*100);
+    const card=document.createElement('div');
+    card.style.cssText='background:'+col+'18;border:2px solid '+col+(i===pkActiveIdx?'':'33')+';border-radius:12px;padding:10px;cursor:pointer;';
+    card.innerHTML='<div style="font-size:26px;text-align:center">'+p.sprite+'</div>'
+      +'<div style="font-weight:900;font-size:12px;text-align:center">'+p.name+'</div>'
+      +'<div style="font-size:10px;opacity:.65;text-align:center">Lv.'+p.level+(i===pkActiveIdx?' ?':'')+'</div>'
+      +'<div style="margin-top:4px;height:5px;background:#ffffff20;border-radius:3px"><div style="height:100%;width:'+hp+'%;background:'+(hp<25?'#ef4444':hp<50?'#f59e0b':'#22c55e')+';border-radius:3px"></div></div>'
+      +'<div style="font-size:9px;opacity:.5;text-align:center;margin-top:1px">'+p.currentHP+'/'+p.maxHP+' HP</div>'
+      +'<div style="margin-top:3px;height:3px;background:#ffffff20;border-radius:3px"><div style="height:100%;width:'+xpp+'%;background:#60a5fa;border-radius:3px"></div></div>'
+      +'<div style="font-size:9px;opacity:.4;text-align:center;margin-top:1px">XP '+(p.xp||0)+'/'+p.xpNext+'</div>';
+    card.onclick=()=>{if(p.currentHP>0){pkActiveIdx=i;pkView('party');pkUpdateUI();}};
+    g.appendChild(card);
+  });
+}
+function pkRenderGym(){
+  const g=document.getElementById('pkGymGrid');if(!g)return;
+  g.innerHTML='';
+  PK_GYMS.forEach((gym,gi)=>{
+    const won=pkBadges>gi;
+    const locked=pkBadges<gym.requiredBadges;
+    const card=document.createElement('div');
+    card.style.cssText='background:#ffffff0a;border:2px solid '+(won?'#ffe66d':locked?'#ffffff22':'#ffffff44')+';border-radius:12px;padding:10px;text-align:center;';
+    card.innerHTML='<div style="font-size:24px">'+gym.sprite+'</div>'
+      +'<div style="font-weight:900;font-size:12px">'+gym.name+'</div>'
+      +'<div style="font-size:10px;opacity:.6">'+gym.badge+(won?' ?':'')+'</div>'
+      +'<div style="font-size:10px;opacity:.5;margin:2px 0">Ace: '+gym.ace.name+' Lv.'+gym.ace.level+'</div>'
+      +'<button onclick="pkStartGymBattle(PK_GYMS['+gi+'])" style="margin-top:6px;padding:5px 10px;border-radius:7px;border:1px solid #ffffff33;background:'+(won?'#ffe66d33':locked?'#ffffff11':'#ffffff1a')+';color:var(--text);cursor:pointer;font-size:11px;font-weight:900;width:100%">'+(won?'Rematch':'Challenge')+(locked?' (need '+gym.requiredBadges+' badges)':'')+'</button>';
+    g.appendChild(card);
+  });
+}
+function pkRenderBag(){
+  const g=document.getElementById('pkBagGrid');if(!g)return;
+  g.innerHTML='';
+  Object.entries(PK_BAG_INFO).forEach(([key,info])=>{
+    const qty=pkBag[key]||0;
+    const isHeal=!!info.heal;
+    const card=document.createElement('div');
+    card.style.cssText='background:#ffffff0a;border:1px solid #ffffff22;border-radius:10px;padding:10px;text-align:center;opacity:'+(qty>0?1:.45)+';';
+    card.innerHTML='<div style="font-size:22px">'+info.emoji+'</div>'
+      +'<div style="font-weight:900;font-size:11px">'+info.label+'</div>'
+      +'<div style="font-size:10px;opacity:.6">x'+qty+'</div>'
+      +'<div style="font-size:9px;opacity:.45;margin-top:2px">'+info.desc+'</div>';
+    if(qty>0){
+      const btn=document.createElement('button');
+      btn.style.cssText='margin-top:6px;padding:4px 8px;border-radius:7px;border:1px solid #ffffff33;background:#ffffff1a;color:var(--text);cursor:pointer;font-size:10px;font-weight:900;width:100%';
+      btn.textContent='Use';
+      btn.onclick=()=>{if(isHeal){pkUseHeal(key,info.heal,false);pkView('battle');}else{pkBag.equippedBall=key;pkLog('Equipped '+info.label+'!');pkRenderBag();}};
+      card.appendChild(btn);
+    }
+    g.appendChild(card);
+  });
+}
+function pokeInitStarters(){
+  const g=document.getElementById('pokeStarterGrid');if(!g)return;
+  if(pkParty.length>0){
+    const bs=document.getElementById('pkBattleScreen');
+    const ss=document.getElementById('pkSelectScreen');
+    if(bs)bs.style.display='block';
+    if(ss)ss.style.display='none';
+    if(!pkEnemy)pkSpawnWild();
+    else{pkUpdateUI();pkShowMenu();}
+    return;
+  }
+  g.innerHTML='';
+  PK_STARTERS.forEach(s=>{
+    const c=document.createElement('div');c.className='poke-starter-card';
+    const col=TC[s.type]||'#aaa';
+    c.innerHTML='<div class="ps-sprite">'+s.sprite+'</div><div class="ps-name">'+s.name+'</div><span class="ps-type" style="background:'+col+'22;border:1px solid '+col+';color:'+col+'">'+s.type.toUpperCase()+'</span>';
+    c.onclick=()=>pkPickStarter(s);
+    g.appendChild(c);
+  });
+  const ss=document.getElementById('pkSelectScreen');
+  const bs=document.getElementById('pkBattleScreen');
+  if(ss)ss.style.display='block';
+  if(bs)bs.style.display='none';
+}
+function pkPickStarter(tmpl){
+  const starter=pkMake(tmpl,5);
+  pkParty=[starter];pkActiveIdx=0;
+  pkBag={potion:3,superPotion:1,fullRestore:0,pokeball:5,greatball:2,ultraball:0};
+  pkBadges=0;pkCaught=0;pkWins=0;
+  pkSpawnWild();
+}
+pokeInitStarters();
+
+// --------------------------------------------------------------
+//  ONLINE GAMES GRID
+// --------------------------------------------------------------
+const ONLINE_GAMES=[
+  {name:'Roblox',        icon:'??',desc:'Build worlds & play millions of games with friends',      tag:'Multiplayer',color:'#ff6b6b',url:'https://www.roblox.com'},
+  {name:'Minecraft',     icon:'??',desc:'Mine, craft, build and survive in a blocky world',         tag:'Sandbox',    color:'#22c55e',url:'https://minecraft.net'},
+  {name:'Among Us',      icon:'??',desc:'Find the impostors before the ship is sabotaged',          tag:'Social',     color:'#60a5fa',url:'https://www.innersloth.com/games/among-us/'},
+  {name:'Kahoot!',       icon:'??',desc:'Learn with fun quizzes on any topic you can imagine',      tag:'Learning',   color:'#a855f7',url:'https://kahoot.com'},
+  {name:'Prodigy Math',  icon:'??',desc:'Battle monsters while solving real math problems',          tag:'Math',       color:'#fb923c',url:'https://www.prodigygame.com'},
+  {name:'GeoGuessr',     icon:'??',desc:'Drop into Street View and guess where you are',            tag:'Geography',  color:'#4ecdc4',url:'https://www.geoguessr.com'},
+  {name:'NYT Wordle',    icon:'??',desc:'Guess the 5-letter word in 6 tries each day',              tag:'Word',       color:'#ffe66d',url:'https://www.nytimes.com/games/wordle'},
+  {name:'CoolMathGames', icon:'??',desc:'Fun strategy, logic, and skill-based browser games',       tag:'Logic',      color:'#ec4899',url:'https://www.coolmathgames.com'},
+  {name:'Scratch',       icon:'??',desc:'Create your own animations, stories, and games',           tag:'Coding',     color:'#fb923c',url:'https://scratch.mit.edu'},
+  {name:'NASA Space',    icon:'??',desc:'Explore space with NASA games, activities, and facts',     tag:'Science',    color:'#60a5fa',url:'https://spaceplace.nasa.gov'},
+  {name:'Gimkit',        icon:'??',desc:'A quiz game where you earn in-game money as you answer',   tag:'Learning',   color:'#ffe66d',url:'https://www.gimkit.com'},
+  {name:'Blooket',       icon:'??',desc:'Answer questions to power-up in exciting game modes',      tag:'Learning',   color:'#22c55e',url:'https://www.blooket.com'},
+  {name:'Typing.com',    icon:'??',desc:'Improve your typing speed with fun lessons',               tag:'Skills',     color:'#a855f7',url:'https://www.typing.com'},
+  {name:'Sporcle',       icon:'??',desc:'Thousands of trivia quizzes on sports, music, geography',  tag:'Trivia',     color:'#4ecdc4',url:'https://www.sporcle.com'},
+  {name:'Fortnite',      icon:'?',desc:'Battle royale: be the last one standing on the island!',   tag:'Battle',     color:'#ff6b6b',url:'https://www.fortnite.com'},
+];
+const grid=document.getElementById('onlineGrid');
+ONLINE_GAMES.forEach(g=>{
+  const d=document.createElement('a'); d.className='game-card'; d.href=g.url; d.target='_blank';
+  d.style.setProperty('--gc',g.color);
+  d.innerHTML=`<div class="gc-icon">${g.icon}</div><div class="gc-name">${g.name}</div><div class="gc-desc">${g.desc}</div><span class="gc-tag" style="color:${g.color}">${g.tag}</span><a class="gc-play" href="${g.url}" target="_blank">? Play Now</a>`;
+  grid.appendChild(d);
+});
+</script>
+</body>
+</html>
