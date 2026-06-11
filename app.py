@@ -6,7 +6,7 @@ st.set_page_config(
     page_title="MyWorld",
     page_icon="🌟",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 # ── Hide Streamlit chrome ──────────────────────────────────────
@@ -15,6 +15,10 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap');
 #MainMenu, header, footer, .stAppDeployButton { display: none !important; }
 .block-container { padding: 0 !important; max-width: 100% !important; }
+/* Narrow the sidebar so the Wave Creator has more room */
+section[data-testid="stSidebar"] { min-width: 180px !important; max-width: 180px !important; width: 180px !important; }
+/* Kill all gap/padding around the iframe */
+.element-container, .stHtml { padding: 0 !important; margin: 0 !important; }
 section[data-testid="stSidebar"] > div {
     background: #000 !important;
     border-right: 1px solid rgba(0,255,65,.2) !important;
@@ -78,13 +82,13 @@ PAGES = {
     "👋  About":         "about.html",
 }
 PAGE_HEIGHTS = {
-    "wave-creator.html": 880,
-    "index.html":        960,
-    "games.html":        960,
-    "chess.html":        960,
-    "school-life.html":  960,
-    "fun-zone.html":     960,
-    "about.html":        960,
+    "wave-creator.html": 760,
+    "index.html":        1200,
+    "games.html":        1200,
+    "chess.html":        1200,
+    "school-life.html":  1200,
+    "fun-zone.html":     1200,
+    "about.html":        1200,
 }
 
 # ── Base path ──────────────────────────────────────────────────
@@ -166,7 +170,7 @@ def check_credentials(username: str, password: str) -> bool:
 # ══════════════════════════════════════════════════════════════
 #  ASSET INLINER
 # ══════════════════════════════════════════════════════════════
-def inline_assets(html: str) -> str:
+def inline_assets(html: str, is_wave: bool = False) -> str:
     def sub_css(m):
         path = os.path.join(BASE, m.group(1))
         try:
@@ -184,12 +188,15 @@ def inline_assets(html: str) -> str:
     html = re.sub(r'<link[^>]+href="([^"]+\.css)"[^>]*/?>',        sub_css, html)
     html = re.sub(r'<script[^>]+src="([^"]+\.js)"[^>]*></script>', sub_js,  html)
 
-    # Hide the site's own nav sidebar (Streamlit provides navigation)
-    patch = ("<style>"
-             "nav.sidebar{display:none!important}"
-             ".main{margin-left:0!important;padding:0!important}"
-             "body,html{overflow:auto}"
-             "</style>")
+    # Hide the site's own nav sidebar (Streamlit handles navigation).
+    # For the Wave Creator keep overflow:hidden so the canvas layout works;
+    # for regular pages allow scrolling so tall content isn't clipped.
+    overflow = "hidden" if is_wave else "auto"
+    patch = (f"<style>"
+             f"nav.sidebar{{display:none!important}}"
+             f".main{{margin-left:0!important;padding:0!important}}"
+             f"body,html{{overflow:{overflow}}}"
+             f"</style>")
     return html.replace("<head>", "<head>" + patch, 1)
 
 # ══════════════════════════════════════════════════════════════
@@ -355,11 +362,13 @@ else:
 
     # ── Render current page ───────────────────────────────────
     page_file = PAGES[st.session_state.page]
-    height    = PAGE_HEIGHTS.get(page_file, 960)
+    is_wave   = page_file == "wave-creator.html"
+    height    = PAGE_HEIGHTS.get(page_file, 1200)
 
     try:
         with open(os.path.join(BASE, page_file), "r", encoding="utf-8") as f:
-            html = inline_assets(f.read())
-        st.components.v1.html(html, height=height, scrolling=False)
+            html = inline_assets(f.read(), is_wave=is_wave)
+        # Wave Creator must not scroll (canvas layout) — other pages can scroll freely
+        st.components.v1.html(html, height=height, scrolling=not is_wave)
     except Exception as exc:
         st.error(f"Could not load {page_file}: {exc}")
