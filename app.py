@@ -100,9 +100,25 @@ PAGE_HEIGHTS = {
 
 # ── Base path ──────────────────────────────────────────────────
 BASE = os.path.dirname(os.path.abspath(__file__))
+GUEST_DB = os.path.join(BASE, "guest_accounts.json")
 
 def _hash(pw: str) -> str:
     return hashlib.sha256(pw.encode()).hexdigest()
+
+# ── JSON fallback (used when Google Sheets is not configured) ───
+def _json_read() -> dict:
+    try:
+        with open(GUEST_DB) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def _json_write(store: dict):
+    try:
+        with open(GUEST_DB, "w") as f:
+            json.dump(store, f, indent=2)
+    except Exception:
+        pass
 
 # ══════════════════════════════════════════════════════════════
 #  SESSION TOKEN STORE
@@ -146,24 +162,28 @@ def _get_worksheet():
         return None
 
 def _read_guests() -> dict:
-    """Return {username: password_hash} from Google Sheets."""
     ws = _get_worksheet()
-    if ws is None:
-        return {}
-    try:
-        rows = ws.get_all_values()
-        return {r[0]: r[1] for r in rows if len(r) >= 2 and r[0]}
-    except Exception:
-        return {}
+    if ws is not None:
+        try:
+            rows = ws.get_all_values()
+            return {r[0]: r[1] for r in rows if len(r) >= 2 and r[0]}
+        except Exception:
+            pass
+    # Fallback: local JSON
+    return _json_read()
 
 def _append_guest(username: str, pw_hash: str):
     ws = _get_worksheet()
-    if ws is None:
-        return
-    try:
-        ws.append_row([username, pw_hash], value_input_option="RAW")
-    except Exception:
-        pass
+    if ws is not None:
+        try:
+            ws.append_row([username, pw_hash], value_input_option="RAW")
+            return
+        except Exception:
+            pass
+    # Fallback: local JSON
+    store = _json_read()
+    store[username] = pw_hash
+    _json_write(store)
 
 def register_guest(username: str, password: str):
     if len(username) < 3:
