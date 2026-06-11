@@ -152,11 +152,14 @@ def register_guest(username: str, password: str):
 #  AUTH
 # ══════════════════════════════════════════════════════════════
 def check_credentials(username: str, password: str) -> bool:
+    # Case-insensitive username match for owner accounts
     try:
-        if st.secrets["users"].get(username) == password:
-            return True
+        for stored_user, stored_pass in st.secrets["users"].items():
+            if stored_user.lower() == username.lower() and stored_pass == password:
+                return True
     except Exception:
         pass
+    # Guest accounts — exact username match
     store = _guest_store()
     return store.get(username) == _hash(password)
 
@@ -255,9 +258,18 @@ if not st.session_state.auth:
             st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
             if st.button("[ ENTER SYSTEM ]", use_container_width=True, key="li_btn"):
                 if check_credentials(u, p):
-                    tok = _new_token(u)
+                    # Use canonical casing from secrets if owner account
+                    display_name = u
+                    try:
+                        for stored_user in st.secrets["users"]:
+                            if stored_user.lower() == u.lower():
+                                display_name = stored_user
+                                break
+                    except Exception:
+                        pass
+                    tok = _new_token(display_name)
                     st.session_state.auth     = True
-                    st.session_state.username = u
+                    st.session_state.username = display_name
                     st.session_state.token    = tok
                     st.rerun()
                 else:
