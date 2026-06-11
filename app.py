@@ -2,6 +2,13 @@ import streamlit as st
 import os, re, hashlib, json, secrets as _sec
 from typing import Optional
 
+try:
+    import gspread
+    from google.oauth2.service_account import Credentials
+    GSHEETS_OK = True
+except ImportError:
+    GSHEETS_OK = False
+
 st.set_page_config(
     page_title="MyWorld",
     page_icon="🌟",
@@ -93,14 +100,15 @@ PAGE_HEIGHTS = {
 
 # ── Base path ──────────────────────────────────────────────────
 BASE = os.path.dirname(os.path.abspath(__file__))
-GUEST_DB = os.path.join(BASE, "guest_accounts.json")
+
+def _hash(pw: str) -> str:
+    return hashlib.sha256(pw.encode()).hexdigest()
 
 # ══════════════════════════════════════════════════════════════
-#  SESSION TOKEN STORE  (shared across all users of the server)
+#  SESSION TOKEN STORE
 # ══════════════════════════════════════════════════════════════
 @st.cache_resource
 def _sessions() -> dict:
-    """token → username. Lives as long as the Streamlit process runs."""
     return {}
 
 def _new_token(username: str) -> str:
@@ -115,23 +123,45 @@ def _revoke_token(tok: str):
     _sessions().pop(tok, None)
 
 # ══════════════════════════════════════════════════════════════
-#  GUEST ACCOUNT STORE
+#  GOOGLE SHEETS — persistent guest account storage
 # ══════════════════════════════════════════════════════════════
 @st.cache_resource
-def _guest_store() -> dict:
+def _get_worksheet():
+    """Return the gspread worksheet, or None if not configured."""
+    if not GSHEETS_OK:
+        return None
     try:
-        with open(GUEST_DB, "r") as f:
-            return json.load(f)
+        info  = dict(st.secrets["gcp_service_account"])
+        creds = Credentials.from_service_account_info(
+            info,
+            scopes=[
+                "https://spreadsheets.google.com/feeds",
+                "https://www.googleapis.com/auth/drive",
+            ],
+        )
+        client   = gspread.authorize(creds)
+        sheet_id = st.secrets["sheets"]["guest_accounts_id"]
+        return client.open_by_key(sheet_id).sheet1
+    except Exception:
+        return None
+
+def _read_guests() -> dict:
+    """Return {username: password_hash} from Google Sheets."""
+    ws = _get_worksheet()
+    if ws is None:
+        return {}
+    try:
+        rows = ws.get_all_values()
+        return {r[0]: r[1] for r in rows if len(r) >= 2 and r[0]}
     except Exception:
         return {}
 
-def _hash(pw: str) -> str:
-    return hashlib.sha256(pw.encode()).hexdigest()
-
-def _save_guests(store: dict):
+def _append_guest(username: str, pw_hash: str):
+    ws = _get_worksheet()
+    if ws is None:
+        return
     try:
-        with open(GUEST_DB, "w") as f:
-            json.dump(store, f, indent=2)
+        ws.append_row([username, pw_hash], value_input_option="RAW")
     except Exception:
         pass
 
@@ -141,31 +171,31 @@ def register_guest(username: str, password: str):
     if len(password) < 6:
         return False, "Password must be at least 6 characters."
     try:
-        if st.secrets["users"].get(username):
-            return False, "That username is already taken."
+        for stored in st.secrets["users"]:
+            if stored.lower() == username.lower():
+                return False, "That username is already taken."
     except Exception:
         pass
-    store = _guest_store()
-    if username in store:
+    guests = _read_guests()
+    if username.lower() in {k.lower() for k in guests}:
         return False, "Username already exists — choose another."
-    store[username] = _hash(password)
-    _save_guests(store)
+    _append_guest(username, _hash(password))
     return True, "Account created!"
 
 # ══════════════════════════════════════════════════════════════
 #  AUTH
 # ══════════════════════════════════════════════════════════════
 def check_credentials(username: str, password: str) -> bool:
-    # Case-insensitive username match for owner accounts
+    # Owner accounts — case-insensitive
     try:
         for stored_user, stored_pass in st.secrets["users"].items():
             if stored_user.lower() == username.lower() and stored_pass == password:
                 return True
     except Exception:
         pass
-    # Guest accounts — exact username match
-    store = _guest_store()
-    return store.get(username) == _hash(password)
+    # Guest accounts — from Google Sheets
+    guests = _read_guests()
+    return guests.get(username) == _hash(password)
 
 # ══════════════════════════════════════════════════════════════
 #  ASSET INLINER
