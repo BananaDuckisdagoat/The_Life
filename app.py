@@ -141,11 +141,10 @@ def _revoke_token(tok: str):
 # ══════════════════════════════════════════════════════════════
 #  GOOGLE SHEETS — persistent guest account storage
 # ══════════════════════════════════════════════════════════════
-@st.cache_resource
 def _get_worksheet():
-    """Return the gspread worksheet, or None if not configured."""
+    """Return (worksheet, error_str). No caching — credentials auto-refresh."""
     if not GSHEETS_OK:
-        return None
+        return None, "gspread not installed"
     try:
         info  = dict(st.secrets["gcp_service_account"])
         creds = Credentials.from_service_account_info(
@@ -157,33 +156,39 @@ def _get_worksheet():
         )
         client   = gspread.authorize(creds)
         sheet_id = st.secrets["sheets"]["guest_accounts_id"]
-        return client.open_by_key(sheet_id).sheet1
-    except Exception:
-        return None
+        return client.open_by_key(sheet_id).sheet1, None
+    except KeyError as e:
+        return None, f"Missing secret key: {e}"
+    except Exception as e:
+        return None, str(e)
 
 def _read_guests() -> dict:
-    ws = _get_worksheet()
+    ws, err = _get_worksheet()
     if ws is not None:
         try:
             rows = ws.get_all_values()
-            return {r[0]: r[1] for r in rows if len(r) >= 2 and r[0]}
+            # skip header row if present
+            data = [r for r in rows if len(r) >= 2 and r[0].lower() != "username"]
+            return {r[0]: r[1] for r in data if r[0]}
         except Exception:
             pass
     # Fallback: local JSON
     return _json_read()
 
-def _append_guest(username: str, pw_hash: str):
-    ws = _get_worksheet()
+def _append_guest(username: str, pw_hash: str) -> Optional[str]:
+    """Returns None on success, error string on failure."""
+    ws, err = _get_worksheet()
     if ws is not None:
         try:
             ws.append_row([username, pw_hash], value_input_option="RAW")
-            return
-        except Exception:
-            pass
+            return None
+        except Exception as e:
+            err = str(e)
     # Fallback: local JSON
     store = _json_read()
     store[username] = pw_hash
     _json_write(store)
+    return f"Sheets unavailable ({err}), saved locally instead"
 
 def register_guest(username: str, password: str):
     if len(username) < 3:
@@ -199,8 +204,10 @@ def register_guest(username: str, password: str):
     guests = _read_guests()
     if username.lower() in {k.lower() for k in guests}:
         return False, "Username already exists — choose another."
-    _append_guest(username, _hash(password))
-    return True, "Account created!"
+    warn = _append_guest(username, _hash(password))
+    if warn:
+        return True, f"Account created! (Warning: {warn})"
+    return True, "Account created! [saved to Google Sheets]"
 
 # ══════════════════════════════════════════════════════════════
 #  AUTH
