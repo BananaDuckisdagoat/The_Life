@@ -359,7 +359,7 @@ if not st.session_state.auth:
                 else:
                     ok, msg = register_guest(new_u, new_p)
                     if ok:
-                        st.success(f"✅  Account created! You can now log in as **{new_u}**.")
+                        st.success(f"✅  {msg}")
                     else:
                         st.error(f"⛔  {msg}")
 
