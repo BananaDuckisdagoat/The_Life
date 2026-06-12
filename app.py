@@ -190,6 +190,62 @@ def _append_guest(username: str, pw_hash: str) -> Optional[str]:
     _json_write(store)
     return f"Sheets unavailable ({err}), saved locally instead"
 
+def _get_score_worksheet():
+    """Return (worksheet, error) for the scores tab — creates tab if missing."""
+    if not GSHEETS_OK:
+        return None, "gspread not installed"
+    try:
+        info  = dict(st.secrets["gcp_service_account"])
+        creds = Credentials.from_service_account_info(
+            info,
+            scopes=[
+                "https://spreadsheets.google.com/feeds",
+                "https://www.googleapis.com/auth/drive",
+            ],
+        )
+        client   = gspread.authorize(creds)
+        sheet_id = st.secrets["sheets"]["guest_accounts_id"]
+        sh = client.open_by_key(sheet_id)
+        try:
+            return sh.worksheet("scores"), None
+        except Exception:
+            ws = sh.add_worksheet(title="scores", rows=1000, cols=4)
+            ws.append_row(["username", "game", "score", "timestamp"], value_input_option="RAW")
+            return ws, None
+    except KeyError as e:
+        return None, f"Missing secret key: {e}"
+    except Exception as e:
+        return None, str(e)
+
+def _save_score(username: str, game: str, score: int):
+    ws, _ = _get_score_worksheet()
+    if ws is None:
+        return
+    try:
+        from datetime import datetime
+        ws.append_row([username, game, score, datetime.utcnow().isoformat()], value_input_option="RAW")
+    except Exception:
+        pass
+
+def _get_player_high_scores(username: str) -> dict:
+    ws, _ = _get_score_worksheet()
+    if ws is None:
+        return {}
+    try:
+        rows = ws.get_all_values()
+        best: dict = {}
+        for r in rows[1:]:  # skip header row
+            if len(r) >= 3 and r[0] == username:
+                try:
+                    s = int(r[2])
+                    if s > best.get(r[1], 0):
+                        best[r[1]] = s
+                except (ValueError, IndexError):
+                    pass
+        return best
+    except Exception:
+        return {}
+
 def register_guest(username: str, password: str):
     if len(username) < 3:
         return False, "Username must be at least 3 characters."
@@ -277,6 +333,21 @@ if _tok_param and not st.session_state.auth:
     else:
         # Token expired or invalid — wipe it from URL so we don't loop
         st.query_params.clear()
+
+# ══════════════════════════════════════════════════════════════
+#  SCORE SAVE: from ?_score=game:value sent by JS listener
+# ══════════════════════════════════════════════════════════════
+_score_param = st.query_params.get("_score", "")
+if _score_param and st.session_state.auth:
+    parts = _score_param.split(":", 1)
+    if len(parts) == 2:
+        try:
+            _save_score(st.session_state.username, parts[0], int(parts[1]))
+        except Exception:
+            pass
+    del st.query_params["_score"]
+    st.session_state.page = "🎮  Games"
+    st.rerun()
 
 # ══════════════════════════════════════════════════════════════
 #  LOGIN / REGISTER SCREEN
@@ -382,6 +453,26 @@ else:
             height=0, scrolling=False,
         )
 
+    # Listener: same-origin iframe can add event listener directly to parent window.
+    # When game iframes postMessage a new high score, this redirects with ?_score=
+    # so Python can save it to Google Sheets.
+    st.components.v1.html("""
+    <script>
+    (function(){
+      if(window._mwScoreListenerActive) return;
+      window._mwScoreListenerActive = true;
+      window.parent.addEventListener('message', function(e){
+        if(!e.data || e.data.type !== 'mw_score') return;
+        var tok = localStorage.getItem('mw_tok') || '';
+        var url = new URL(window.parent.location.href);
+        url.searchParams.set('_score', e.data.game + ':' + e.data.score);
+        if(tok) url.searchParams.set('_t', tok);
+        window.parent.location.replace(url.toString());
+      });
+    })();
+    </script>
+    """, height=0, scrolling=False)
+
     # ── Sidebar navigation ────────────────────────────────────
     with st.sidebar:
         st.markdown(f"""
@@ -416,6 +507,24 @@ else:
                 "</script>",
                 height=0, scrolling=False,
             )
+
+    # ── Restore personal bests from Sheets into localStorage ──
+    if st.session_state.page == "🎮  Games":
+        bests = _get_player_high_scores(st.session_state.username)
+        if bests:
+            bests_json = json.dumps(bests)
+            st.components.v1.html(f"""
+            <script>
+            (function(){{
+              var server = {bests_json};
+              var local  = JSON.parse(localStorage.getItem('mw_highscores') || '{{}}');
+              var merged = {{}};
+              var games  = new Set([...Object.keys(server), ...Object.keys(local)]);
+              games.forEach(function(g){{ merged[g] = Math.max(server[g]||0, local[g]||0); }});
+              localStorage.setItem('mw_highscores', JSON.stringify(merged));
+            }})();
+            </script>
+            """, height=0, scrolling=False)
 
     # ── Render current page ───────────────────────────────────
     page_file = PAGES[st.session_state.page]

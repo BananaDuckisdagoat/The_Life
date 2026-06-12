@@ -160,7 +160,12 @@ function getUserRank(){
 // ── 7. GAME SCORE TRACKING ─────────────────────────────────
 function submitGameScore(gameId,score,xpReward,onScore){
   const hs=MW.get('highscores',{}),prev=hs[gameId]||0;
-  if(score>prev){ hs[gameId]=score; MW.set('highscores',hs); if(prev>0) showToast(`🏅 New ${gameId} high score: ${score}!`,'🎉'); }
+  if(score>prev){
+    hs[gameId]=score; MW.set('highscores',hs);
+    if(prev>0) showToast(`🏅 New ${gameId} high score: ${score}!`,'🎉');
+    // Notify parent frame — listener saves to Google Sheets
+    try{ window.parent.postMessage({type:'mw_score',game:gameId,score:score},'*'); }catch(e){}
+  }
   if(xpReward>0) addXP(xpReward,`${gameId} game`);
   if(typeof onScore==='function') onScore(score);
   _checkLeaderboardStickers();
