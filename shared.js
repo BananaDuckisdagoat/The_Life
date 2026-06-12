@@ -143,7 +143,11 @@ const LB_SEED=[
 ];
 function getLeaderboardData(){
   const username=getUsername(),xp=getXP();
-  const users=LB_SEED.map(u=>({...u}));
+  const serverData=(typeof window._mwLeaderboard!=='undefined'&&window._mwLeaderboard.length>0)
+    ?window._mwLeaderboard:null;
+  const users=serverData
+    ?serverData.map(u=>({username:u.username,xp:u.xp,avatar:u.avatar||'🦊'}))
+    :LB_SEED.map(u=>({...u}));
   if(username){
     const clash=users.findIndex(u=>u.username===username);
     if(clash>-1) users.splice(clash,1);
@@ -163,8 +167,8 @@ function submitGameScore(gameId,score,xpReward,onScore){
   if(score>prev){
     hs[gameId]=score; MW.set('highscores',hs);
     if(prev>0) showToast(`🏅 New ${gameId} high score: ${score}!`,'🎉');
-    // Notify parent frame — listener saves to Google Sheets
-    try{ window.parent.postMessage({type:'mw_score',game:gameId,score:score},'*'); }catch(e){}
+    // Notify parent frame — listener saves score + XP to Google Sheets
+    try{ window.parent.postMessage({type:'mw_score',game:gameId,score:score,xp:getXP()},'*'); }catch(e){}
   }
   if(xpReward>0) addXP(xpReward,`${gameId} game`);
   if(typeof onScore==='function') onScore(score);

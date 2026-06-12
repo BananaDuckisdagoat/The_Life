@@ -246,6 +246,67 @@ def _get_player_high_scores(username: str) -> dict:
     except Exception:
         return {}
 
+def _get_leaderboard_worksheet():
+    """Return (worksheet, error) for the leaderboard tab — creates tab if missing."""
+    if not GSHEETS_OK:
+        return None, "gspread not installed"
+    try:
+        info  = dict(st.secrets["gcp_service_account"])
+        creds = Credentials.from_service_account_info(
+            info,
+            scopes=[
+                "https://spreadsheets.google.com/feeds",
+                "https://www.googleapis.com/auth/drive",
+            ],
+        )
+        client   = gspread.authorize(creds)
+        sheet_id = st.secrets["sheets"]["guest_accounts_id"]
+        sh = client.open_by_key(sheet_id)
+        try:
+            return sh.worksheet("leaderboard"), None
+        except Exception:
+            ws = sh.add_worksheet(title="leaderboard", rows=500, cols=3)
+            ws.append_row(["username", "xp", "last_updated"], value_input_option="RAW")
+            return ws, None
+    except KeyError as e:
+        return None, f"Missing secret key: {e}"
+    except Exception as e:
+        return None, str(e)
+
+def _save_leaderboard_xp(username: str, xp: int):
+    ws, _ = _get_leaderboard_worksheet()
+    if ws is None:
+        return
+    try:
+        from datetime import datetime
+        ts = datetime.utcnow().isoformat()
+        rows = ws.get_all_values()
+        for i, r in enumerate(rows[1:], start=2):   # 1-indexed, skip header
+            if r and r[0] == username:
+                ws.update(f"B{i}:C{i}", [[xp, ts]])
+                return
+        ws.append_row([username, xp, ts], value_input_option="RAW")
+    except Exception:
+        pass
+
+def _get_leaderboard_data() -> list:
+    """Return list of {username, xp} sorted by xp desc."""
+    ws, _ = _get_leaderboard_worksheet()
+    if ws is None:
+        return []
+    try:
+        rows = ws.get_all_values()
+        result = []
+        for r in rows[1:]:   # skip header
+            if len(r) >= 2 and r[0]:
+                try:
+                    result.append({"username": r[0], "xp": int(r[1])})
+                except (ValueError, IndexError):
+                    pass
+        return sorted(result, key=lambda x: -x["xp"])
+    except Exception:
+        return []
+
 def register_guest(username: str, password: str):
     if len(username) < 3:
         return False, "Username must be at least 3 characters."
@@ -338,6 +399,7 @@ if _tok_param and not st.session_state.auth:
 #  SCORE SAVE: from ?_score=game:value sent by JS listener
 # ══════════════════════════════════════════════════════════════
 _score_param = st.query_params.get("_score", "")
+_xp_param    = st.query_params.get("_xp", "")
 if _score_param and st.session_state.auth:
     parts = _score_param.split(":", 1)
     if len(parts) == 2:
@@ -345,8 +407,23 @@ if _score_param and st.session_state.auth:
             _save_score(st.session_state.username, parts[0], int(parts[1]))
         except Exception:
             pass
+    if _xp_param:
+        try:
+            _save_leaderboard_xp(st.session_state.username, int(_xp_param))
+        except Exception:
+            pass
     del st.query_params["_score"]
+    if "_xp" in st.query_params:
+        del st.query_params["_xp"]
     st.session_state.page = "🎮  Games"
+    st.rerun()
+elif _xp_param and st.session_state.auth:
+    # Home page XP sync (no game score, just XP update)
+    try:
+        _save_leaderboard_xp(st.session_state.username, int(_xp_param))
+    except Exception:
+        pass
+    del st.query_params["_xp"]
     st.rerun()
 
 # ══════════════════════════════════════════════════════════════
@@ -453,21 +530,27 @@ else:
             height=0, scrolling=False,
         )
 
-    # Listener: same-origin iframe can add event listener directly to parent window.
-    # When game iframes postMessage a new high score, this redirects with ?_score=
-    # so Python can save it to Google Sheets.
+    # Listener: same-origin iframe attaches to parent window.
+    # Handles game score saves AND XP-only syncs from the home page.
     st.components.v1.html("""
     <script>
     (function(){
-      if(window._mwScoreListenerActive) return;
-      window._mwScoreListenerActive = true;
+      if(window.parent._mwListenerActive) return;
+      window.parent._mwListenerActive = true;
       window.parent.addEventListener('message', function(e){
-        if(!e.data || e.data.type !== 'mw_score') return;
+        if(!e.data) return;
         var tok = localStorage.getItem('mw_tok') || '';
         var url = new URL(window.parent.location.href);
-        url.searchParams.set('_score', e.data.game + ':' + e.data.score);
-        if(tok) url.searchParams.set('_t', tok);
-        window.parent.location.replace(url.toString());
+        if(e.data.type === 'mw_score'){
+          url.searchParams.set('_score', e.data.game + ':' + e.data.score);
+          if(e.data.xp !== undefined) url.searchParams.set('_xp', e.data.xp);
+          if(tok) url.searchParams.set('_t', tok);
+          window.parent.location.replace(url.toString());
+        } else if(e.data.type === 'mw_xp_sync'){
+          url.searchParams.set('_xp', e.data.xp);
+          if(tok) url.searchParams.set('_t', tok);
+          window.parent.location.replace(url.toString());
+        }
       });
     })();
     </script>
@@ -534,6 +617,25 @@ else:
     try:
         with open(os.path.join(BASE, page_file), "r", encoding="utf-8") as f:
             html = inline_assets(f.read(), is_wave=is_wave)
+
+        # Inject real leaderboard data + XP sync trigger into Home page
+        if page_file == "index.html":
+            lb_data = _get_leaderboard_data()
+            lb_json = json.dumps(lb_data)
+            inject = (
+                f"<script>window._mwLeaderboard={lb_json};</script>"
+                # Sync XP to server once per change (debounced via mw_xp_synced key)
+                "<script>(function(){"
+                "  var xp=JSON.parse(localStorage.getItem('mw_xp')||'0');"
+                "  var synced=JSON.parse(localStorage.getItem('mw_xp_synced')||'-1');"
+                "  if(xp>0 && xp!==synced){"
+                "    localStorage.setItem('mw_xp_synced',JSON.stringify(xp));"
+                "    window.parent.postMessage({type:'mw_xp_sync',xp:xp},'*');"
+                "  }"
+                "})();</script>"
+            )
+            html = html.replace("</head>", inject + "</head>", 1)
+
         # Wave Creator must not scroll (canvas layout) — other pages can scroll freely
         st.components.v1.html(html, height=height, scrolling=not is_wave)
     except Exception as exc:
